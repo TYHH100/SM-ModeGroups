@@ -394,7 +394,7 @@ Extension.configure()
 builder.targets = builder.CloneableList(Extension.all_targets)
 
 BuildScripts = [
-  'AMBuilder',
+  'extension/AMBuilder',
   'PackageScript',
 ]
 
