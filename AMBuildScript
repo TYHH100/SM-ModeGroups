@@ -30,25 +30,25 @@ def SetArchFlags(compiler):
     if compiler.target.arch == 'x86_64':
       compiler.defines += ['WIN64']
 
-hl2sdk_manifests_path = None
+# hl2sdk_manifests_path = None
 
-# First we check if the manifest exists in the current path
-hl2sdk_manifests_path = os.path.join(builder.sourcePath, 'hl2sdk-manifests/SdkHelpers.ambuild')
+# # First we check if the manifest exists in the current path
+# hl2sdk_manifests_path = os.path.join(builder.sourcePath, 'hl2sdk-manifests/SdkHelpers.ambuild')
 
-if not os.path.exists(hl2sdk_manifests_path):
-  # manifests does not exists in the project file, use the path from --hl2sdk-manifest-path
-  if not builder.options.hl2sdk_manifest:
-    raise Exception('HL2SDK Manifest root path not set! (--hl2sdk-manifest-path)')
-  else:
-    hl2sdk_manifests_path = os.path.join(builder.options.hl2sdk_manifest, 'SdkHelpers.ambuild')
+# if not os.path.exists(hl2sdk_manifests_path):
+#   # manifests does not exists in the project file, use the path from --hl2sdk-manifest-path
+#   if not builder.options.hl2sdk_manifest:
+#     raise Exception('HL2SDK Manifest root path not set! (--hl2sdk-manifest-path)')
+#   else:
+#     hl2sdk_manifests_path = os.path.join(builder.options.hl2sdk_manifest, 'SdkHelpers.ambuild')
 
-    if not os.path.exists(hl2sdk_manifests_path):
-      raise Exception('Could not find SdkHelpers.ambuild in the given HL2SDK Manifest path!')
+#     if not os.path.exists(hl2sdk_manifests_path):
+#       raise Exception('Could not find SdkHelpers.ambuild in the given HL2SDK Manifest path!')
 
 
-SdkHelpers = builder.Eval(hl2sdk_manifests_path, {
-    'Project': 'sm-extension'
-})
+# SdkHelpers = builder.Eval(hl2sdk_manifests_path, {
+#     'Project': 'sm-extension'
+# })
 
 class ExtensionConfig(object):
   def __init__(self):
