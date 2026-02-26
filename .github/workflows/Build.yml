@@ -43,16 +43,20 @@ jobs:
           ref: 1.12-dev
           path: metamod-1.12
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Checking out AMBuild
         uses: actions/checkout@v6
         with:
           repository: alliedmodders/ambuild
           path: ambuild 
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setting up ambuild
+        working-directory: ambuild
+        run: python3 setup.py install
 
       - name: Checking out hl2sdk-tf2
         uses: actions/checkout@v2
