@@ -42,9 +42,12 @@ jobs:
           path: sourcemod-1.12
           submodules: recursive
 
-      - name: Copy asm libudis86
+      - name: Copy asm
         run: |
           cp -r ${{ github.workspace }}/asm ${{ github.workspace }}/sourcemod-1.12/public/asm
+
+      - name: Copy libudis86
+        run: |
           cp -r ${{ github.workspace }}/libudis86 ${{ github.workspace }}/sourcemod-1.12/public/libudis86
 
       - name: Checking out MM:Source
