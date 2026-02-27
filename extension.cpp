@@ -3,6 +3,11 @@
 #include <string>
 #include <vector>
 
+#if defined CVAR_INTERFACE_VERSION
+#undef CVAR_INTERFACE_VERSION
+#endif
+#include <icvar.h>
+
 namespace fs = std::filesystem;
 
 ModeGroupExt g_ModeGroupExt;
@@ -94,7 +99,7 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
                 if (entry.is_regular_file() && entry.path().extension() == ".smx") {
                     char loadErr[256];
                     bool wasloaded = false;
-                    IPlugin* p = m_pPluginSys->LoadPlugin(entry.path().string().c_str(), false, nullptr, loadErr, sizeof(loadErr), &wasloaded);
+                    IPlugin* p = m_pPluginSys->LoadPlugin(entry.path().string().c_str(), false, PluginType_MapUpdated, loadErr, sizeof(loadErr), &wasloaded);
                     if (p && !wasloaded) m_LoadedPlugins.push_back(p);
                 }
             }
