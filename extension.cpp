@@ -66,21 +66,25 @@ bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
     SM_GET_IFACE(PLUGINSYSTEM, m_pPluginSys);
     SM_GET_IFACE(TEXTPARSERS, m_pTextParsers);
     SM_GET_IFACE(GAMEHELPERS, m_pGameHelpers);
-    SM_GET_IFACE(CVAR, m_pCVar);
 
-    if (!m_pPluginSys || !m_pTextParsers || !m_pCVar) {
-        snprintf(error, maxlength, "Required interfaces missing");
+    if (!m_pPluginSys || !m_pTextParsers) {
+        snprintf(error, maxlength, "Required interfaces (PluginSys/TextParsers) missing");
         return false;
     }
     
-    m_pCVar->RegisterConCommand(&sm_mode);
+    if (!g_pCVar) {
+        snprintf(error, maxlength, "Could not find ICvar interface");
+        return false;
+    }
+    
+    g_pCVar->RegisterConCommand(&sm_mode);
     return true;
 }
 
 void ModeGroupExt::SDK_OnUnload() {
     UnloadCurrentModePlugins();
-    if (m_pCVar) {
-        m_pCVar->UnregisterConCommand(&sm_mode);
+    if (g_pCVar) {
+        g_pCVar->UnregisterConCommand(&sm_mode);
     }
 }
 
@@ -115,7 +119,7 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     }
 
     for (const auto& cv : parser.cvars) {
-        ConVar* pCvar = m_pCVar->FindVar(cv.first.c_str());
+        ConVar* pCvar = g_pCVar->FindVar(cv.first.c_str());
         if (pCvar) pCvar->SetValue(cv.second.c_str());
     }
 
