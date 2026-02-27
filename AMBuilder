@@ -14,7 +14,6 @@ sourceFiles = [
   'libudis86/syn.c',
   'libudis86/udis86.c',
   'asm/asm.c',
-  'safetyhook', 'include',
   os.path.join(Extension.sm_root, 'public', 'CDetour', 'detours.cpp'),
 ]
 
