@@ -445,13 +445,13 @@ void ModeGroupExtension::OnRootConsoleCommand(const char *cmdname, const IComman
 {
 	if (strcmp(cmdname, "modegroup_switch") == 0)
 	{
-		if (args->ArgC() < 2)
+		if (args->ArgC() < 3)
 		{
-			rootconsole->ConsolePrint("Usage: modegroup_switch <groupname>");
+			rootconsole->ConsolePrint("Usage: sm modegroup_switch <groupname>");
 			return;
 		}
-
-		SwitchModeGroup(args->Arg(1));
+		
+		SwitchModeGroup(args->Arg(2));
 	}
 	else if (strcmp(cmdname, "modegroup_reload") == 0)
 	{
