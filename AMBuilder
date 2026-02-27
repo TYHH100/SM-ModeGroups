@@ -1,4 +1,5 @@
 # vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
+from setuptools import Extension
 import os
 
 # Name of your extesion, this will also be it's file name.
@@ -7,14 +8,13 @@ projectName = 'modegroup'
 # smsdk_ext.cpp will be automatically added later
 sourceFiles = [
   'extension.cpp',
-  'libudis86/decode.c',
-  'libudis86/itab.c',
-  'libudis86/syn-att.c',
-  'libudis86/syn-intel.c',
-  'libudis86/syn.c',
-  'libudis86/udis86.c',
-  'asm/asm.c',
-  #os.path.join(Extension.sm_root, 'public', 'CDetour', 'detours.cpp'),
+  os.path.join(Extension.sm_root, 'public', 'asm', 'asm.c'),
+  os.path.join(Extension.sm_root, 'public', 'libudis86', 'decode.c'),
+  os.path.join(Extension.sm_root, 'public', 'libudis86', 'itab.c'),
+  os.path.join(Extension.sm_root, 'public', 'libudis86', 'syn-att.c'),
+  os.path.join(Extension.sm_root, 'public', 'libudis86', 'syn-intel.c'),
+  os.path.join(Extension.sm_root, 'public', 'libudis86', 'syn.c'),
+  os.path.join(Extension.sm_root, 'public', 'libudis86', 'udis86.c'),
 ]
 
 project = builder.LibraryProject(projectName)
