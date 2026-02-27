@@ -1,5 +1,6 @@
 #include "extension.h"
 #include <filesystem>
+#include <ITextParsers.h>
 #include <string>
 #include <vector>
 
@@ -55,7 +56,7 @@ public:
 
 void Command_SwitchMode(const CCommand &command) {
     if (command.ArgC() < 2) {
-        smutils->LogMessage(myself, "Usage: sm_mode <mode_name>");
+        g_pSM->LogMessage(myself, "Usage: sm_mode <mode_name>");
         return;
     }
     g_ModeGroupExt.SwitchMode(command.Arg(1));
@@ -64,7 +65,7 @@ void Command_SwitchMode(const CCommand &command) {
 ConCommand sm_mode("sm_mode", Command_SwitchMode, "Switch mode group", FCVAR_NONE);
 
 bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
-    engine = iserver->GetEngine();
+    engine = g_pSM->GetIServer()->GetEngine();
     g_pCVar->RegisterConCommand(&sm_mode);
     return true;
 }
@@ -82,7 +83,7 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     SMCError err = g_pSM->ParseSMCFile(configPath, &parser, nullptr);
 
     if (err != SMCError_Okay || !parser.found) {
-        smutils->LogError(myself, "Failed to load mode '%s'", modeName);
+        g_pSM->LogError(myself, "Failed to load mode '%s'", modeName);
         return false;
     }
 
@@ -110,16 +111,16 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     }
 
     for (const auto& cmd : parser.commands) {
-        engine->ServerCommand(cmd.c_str());
+        g_pEngine->ServerCommand(cmd.c_str());
     }
-    engine->ServerExecute();
+    g_pEngine->ServerExecute();
 
     return true;
 }
 
 void ModeGroupExt::UnloadCurrentModePlugins() {
     for (IPlugin* p : m_LoadedPlugins) {
-        if (p && p->GetStatus() <= Plugin_Paused) pluginsys->UnloadPlugin(p);
+        if (p && p->GetStatus() <= Plugin_Paused) g_pPluginSys->UnloadPlugin(p);
     }
     m_LoadedPlugins.clear();
 }
