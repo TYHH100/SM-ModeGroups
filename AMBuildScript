@@ -30,30 +30,30 @@ def SetArchFlags(compiler):
     if compiler.target.arch == 'x86_64':
       compiler.defines += ['WIN64']
 
-# hl2sdk_manifests_path = None
+hl2sdk_manifests_path = None
 
-# # First we check if the manifest exists in the current path
-# hl2sdk_manifests_path = os.path.join(builder.sourcePath, 'hl2sdk-manifests/SdkHelpers.ambuild')
+# First we check if the manifest exists in the current path
+hl2sdk_manifests_path = os.path.join(builder.sourcePath, 'hl2sdk-manifests/SdkHelpers.ambuild')
 
-# if not os.path.exists(hl2sdk_manifests_path):
-#   # manifests does not exists in the project file, use the path from --hl2sdk-manifest-path
-#   if not builder.options.hl2sdk_manifest:
-#     raise Exception('HL2SDK Manifest root path not set! (--hl2sdk-manifest-path)')
-#   else:
-#     hl2sdk_manifests_path = os.path.join(builder.options.hl2sdk_manifest, 'SdkHelpers.ambuild')
+if not os.path.exists(hl2sdk_manifests_path):
+  # manifests does not exists in the project file, use the path from --hl2sdk-manifest-path
+  if not builder.options.hl2sdk_manifest:
+    raise Exception('HL2SDK Manifest root path not set! (--hl2sdk-manifest-path)')
+  else:
+    hl2sdk_manifests_path = os.path.join(builder.options.hl2sdk_manifest, 'SdkHelpers.ambuild')
 
-#     if not os.path.exists(hl2sdk_manifests_path):
-#       raise Exception('Could not find SdkHelpers.ambuild in the given HL2SDK Manifest path!')
+    if not os.path.exists(hl2sdk_manifests_path):
+      raise Exception('Could not find SdkHelpers.ambuild in the given HL2SDK Manifest path!')
 
 
-# SdkHelpers = builder.Eval(hl2sdk_manifests_path, {
-#     'Project': 'sm-extension'
-# })
+SdkHelpers = builder.Eval(hl2sdk_manifests_path, {
+    'Project': 'sm-extension'
+})
 
 class ExtensionConfig(object):
   def __init__(self):
     self.sdk_manifests = []
-    # self.sdks = {}
+    self.sdks = {}
     self.sdk_targets = []
     self.extensions = []
     self.generated_headers = None
@@ -93,26 +93,26 @@ class ExtensionConfig(object):
       return 'Debug'
     return 'Release'
 
-  # def findSdkPath(self, sdk_name):
-  #   dir_name = 'hl2sdk-{}'.format(sdk_name)
-  #   if builder.options.hl2sdk_root:
-  #     sdk_path = os.path.join(builder.options.hl2sdk_root, dir_name)
-  #     if os.path.exists(sdk_path):
-  #       return sdk_path
-  #   return ResolveEnvPath('HL2SDK{}'.format(sdk_name.upper()), dir_name)
+  def findSdkPath(self, sdk_name):
+    dir_name = 'hl2sdk-{}'.format(sdk_name)
+    if builder.options.hl2sdk_root:
+      sdk_path = os.path.join(builder.options.hl2sdk_root, dir_name)
+      if os.path.exists(sdk_path):
+        return sdk_path
+    return ResolveEnvPath('HL2SDK{}'.format(sdk_name.upper()), dir_name)
 
-  # def shouldIncludeSdk(self, sdk):
-  #   return not sdk.get('source2', False)
+  def shouldIncludeSdk(self, sdk):
+    return not sdk.get('source2', False)
 
   def detectSDKs(self):
-    # sdk_list = [s for s in builder.options.sdks.split(',') if s]
-    # SdkHelpers.sdk_filter = self.shouldIncludeSdk
-    # SdkHelpers.find_sdk_path = self.findSdkPath
-    # SdkHelpers.findSdks(builder, self.all_targets, sdk_list)
+    sdk_list = [s for s in builder.options.sdks.split(',') if s]
+    SdkHelpers.sdk_filter = self.shouldIncludeSdk
+    SdkHelpers.find_sdk_path = self.findSdkPath
+    SdkHelpers.findSdks(builder, self.all_targets, sdk_list)
 
-    # self.sdks = SdkHelpers.sdks
-    # self.sdk_manifests = SdkHelpers.sdk_manifests
-    # self.sdk_targets = SdkHelpers.sdk_targets
+    self.sdks = SdkHelpers.sdks
+    self.sdk_manifests = SdkHelpers.sdk_manifests
+    self.sdk_targets = SdkHelpers.sdk_targets
 
     if builder.options.mms_path:
       self.mms_root = builder.options.mms_path
@@ -394,9 +394,8 @@ Extension.configure()
 builder.targets = builder.CloneableList(Extension.all_targets)
 
 BuildScripts = [
-  'extension/AMBuilder',
+  'AMBuilder',
   'PackageScript',
 ]
 
 builder.Build(BuildScripts, { 'Extension': Extension })
-

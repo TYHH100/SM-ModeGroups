@@ -42,6 +42,7 @@ jobs:
           repository: alliedmodders/metamod-source
           ref: 1.12-dev
           path: metamod-1.12
+          submodules: recursive
 
       - name: Checking out AMBuild
         uses: actions/checkout@v6
@@ -60,6 +61,13 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python setup.py install
 
+      - name: Checking out hl2sdk-manifests
+        uses: actions/checkout@v6
+        with:
+          repository: alliedmodders/hl2sdk-manifests
+          ref: master
+          path: hl2sdk-manifests
+
       # - name: Checking out hl2sdk-tf2
       #   uses: actions/checkout@v6
       #   with:
@@ -67,10 +75,17 @@ jobs:
       #     ref: tf2
       #     path: hl2sdk-tf2
 
+      # - name: Checking out hl2sdk-sdk2013
+      #   uses: actions/checkout@v6
+      #   with:
+      #     repository: alliedmodders/hl2sdk
+      #     ref: sdk2013
+      #     path: hl2sdk-sdk2013
+
       - name: Configure and Build
         run: |
           mkdir -p build && cd build
-          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/sourcemod-1.12" --mms-path="${{ github.workspace }}/metamod-1.12"
+          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/sourcemod-1.12" --mms-path="${{ github.workspace }}/metamod-1.12" --hl2sdk-manifest-path="${{ github.workspace }}/hl2sdk-manifests"
           ambuild
 
       - name: Upload extension package
