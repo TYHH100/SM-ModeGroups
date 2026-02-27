@@ -203,10 +203,13 @@ bool ModeGroupExtension::LoadConfig(char *error, size_t maxlen)
 
 	ModeGroupConfigParser parser(m_ModeGroups);
 	SMCStates states;
+	char smcError[256];
 
-	if (!textparsers->ParseFile_SMC(path, &parser, &states))
+	SMCError err = textparsers->ParseSMCFile(path, &parser, &states, smcError, sizeof(smcError));
+	if (err != SMCError_Okay)
 	{
-		ke::SafeStrcpy(error, maxlen, "Failed to parse modegroup.cfg");
+		ke::SafeSprintf(error, maxlen, "Failed to parse modegroup.cfg: %s (line %u, col %u)", 
+			smcError, states.line, states.col);
 		return false;
 	}
 
