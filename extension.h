@@ -12,6 +12,11 @@
 #endif
 #include <icvar.h>
 
+#if defined _DEBUG
+#undef _DEBUG
+#endif
+#include <tier1/convar.h>
+
 class ModeGroupExt : public SDKExtension
 {
 public:
