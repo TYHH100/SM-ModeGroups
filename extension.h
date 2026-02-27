@@ -7,7 +7,7 @@
 #include <IForwardSys.h>
 #include <IHandleSys.h>
 #include <icvar.h>
-#include <IKeyValues.h>
+#include <KeyValues.h>
 #include <vector>
 #include <string>
 
