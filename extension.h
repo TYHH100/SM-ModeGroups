@@ -2,17 +2,23 @@
 #define _MODEGROUP_EXTENSION_H_
 
 #include "smsdk_config.h"
-#include <IShareSys.h>
+#include <sm_platform.h>
+#include <sm_globals.h>
+#include <extension.h>
+#include <filesystem.h>
+#include <convar.h>
 #include <IPluginSys.h>
-#include <IForwardSys.h>
-#include <IHandleSys.h>
-#include <icvar.h>
-#include <KeyValues.h>
 #include <ILibrarySys.h>
-#include <IPlayerHelpers.h> 
+#include <IPlayerHelpers.h>
+#include <IAdminSystem.h>
+#include <ISourceMod.h>
+#include <IShareSys.h>
+#include <sourcemod_version.h>
 #include <vector>
 #include <string>
 #include <map>
+
+
 
 using namespace SourceMod;
 

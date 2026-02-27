@@ -1,185 +1,210 @@
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.h:23:14: error: ‘map’ in namespace ‘std’ does not name a template type
-   23 |         std::map<std::string, std::string> cvars;
-      |              ^~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.h:13:1: note: ‘std::map’ is defined in header ‘<map>’; did you forget to ‘#include <map>’?
-   12 | #include <string>
-  +++ |+#include <map>
-   13 | 
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.h:30:47: error: expected class-name before ‘,’ token
-   30 | class ModeGroupExtension : public SDKExtension, public IPluginsListener
-      |                                               ^
-In file included from /home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.h:4:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In function ‘SourceMod::IExtension* GetSMExtAPI()’:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:6:12: error: lvalue required as unary ‘&’ operand
-    6 | SMEXT_LINK(&g_ModeGroup);
-      |            ^~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/smsdk_config.h:15:89: note: in definition of macro ‘SMEXT_LINK’
-   15 |                 SourceMod::IExtension *GetSMExtAPI() { return (SourceMod::IExtension *)&name; } \
-      |                                                                                         ^~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘virtual bool ModeGroupExtension::SDK_OnLoad(char*, size_t, bool)’:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:23:9: error: ‘sharesys’ was not declared in this scope
-   23 |         sharesys->AddInterface(myself, this);
-      |         ^~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:23:32: error: ‘myself’ was not declared in this scope
-   23 |         sharesys->AddInterface(myself, this);
-      |                                ^~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:34:9: error: ‘playerhelpers’ was not declared in this scope
-   34 |         playerhelpers->GetPluginManager()->AddPluginsListener(this);
-      |         ^~~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:37:32: error: ‘OnModeCommand’ was not declared in this scope; did you mean ‘ConCommand’?
-   37 |         RegAdminCmd("sm_mode", OnModeCommand, ADMFLAG_ROOT, "Switch game mode (see modegroup.cfg)");
-      |                                ^~~~~~~~~~~~~
-      |                                ConCommand
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:37:47: error: ‘ADMFLAG_ROOT’ was not declared in this scope
-   37 |         RegAdminCmd("sm_mode", OnModeCommand, ADMFLAG_ROOT, "Switch game mode (see modegroup.cfg)");
-      |                                               ^~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:37:9: error: ‘RegAdminCmd’ was not declared in this scope
-   37 |         RegAdminCmd("sm_mode", OnModeCommand, ADMFLAG_ROOT, "Switch game mode (see modegroup.cfg)");
-      |         ^~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘virtual void ModeGroupExtension::SDK_OnUnload()’:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:54:9: error: ‘playerhelpers’ was not declared in this scope
-   54 |         playerhelpers->GetPluginManager()->RemovePluginsListener(this);
-      |         ^~~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘bool ModeGroupExtension::LoadConfig()’:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:92:19: error: ‘PLATFORM_MAX_PATH’ was not declared in this scope
-   92 |         char path[PLATFORM_MAX_PATH];
-      |                   ^~~~~~~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:93:9: error: ‘g_pSM’ was not declared in this scope
-   93 |         g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
-      |         ^~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:93:26: error: ‘Path_SM’ was not declared in this scope
-   93 |         g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
-      |                          ^~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:93:35: error: ‘path’ was not declared in this scope
-   93 |         g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
-      |                                   ^~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:95:9: error: ‘IKeyValues’ was not declared in this scope; did you mean ‘KeyValues’?
-   95 |         IKeyValues *kv = new CKeyValues("ModeGroups");
-      |         ^~~~~~~~~~
-      |         KeyValues
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:95:21: error: ‘kv’ was not declared in this scope
-   95 |         IKeyValues *kv = new CKeyValues("ModeGroups");
-      |                     ^~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:95:30: error: expected type-specifier before ‘CKeyValues’
-   95 |         IKeyValues *kv = new CKeyValues("ModeGroups");
-      |                              ^~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:98:24: error: type ‘<type error>’ argument given to ‘delete’, expected pointer
-   98 |                 delete kv;
-      |                        ^~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:105:24: error: type ‘<type error>’ argument given to ‘delete’, expected pointer
-  105 |                 delete kv;
-      |                        ^~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:110:26: error: ‘sub’ was not declared in this scope; did you mean ‘fsub’?
-  110 |         for (IKeyValues *sub = kv->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-      |                          ^~~
-      |                          fsub
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:125:42: error: ‘p’ was not declared in this scope; did you mean ‘sp’?
-  125 |                         for (IKeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
-      |                                          ^
-      |                                          sp
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:139:42: error: ‘p’ was not declared in this scope; did you mean ‘sp’?
-  139 |                         for (IKeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
-      |                                          ^
-      |                                          sp
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:141:38: error: ‘struct ModeInfo’ has no member named ‘cvars’
-  141 |                                 info.cvars[p->GetName()] = p->GetString();
-      |                                      ^~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:149:42: error: ‘p’ was not declared in this scope; did you mean ‘sp’?
-  149 |                         for (IKeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
-      |                                          ^
-      |                                          sp
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:163:16: error: type ‘<type error>’ argument given to ‘delete’, expected pointer
-  163 |         delete kv;
-      |                ^~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘void ModeGroupExtension::CollectPluginsFromDir(const char*, std::vector<std::__cxx11::basic_string<char> >&, bool)’:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:172:23: error: ‘PLATFORM_MAX_PATH’ was not declared in this scope
-  172 |         char fullPath[PLATFORM_MAX_PATH];
-      |                       ^~~~~~~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:173:9: error: ‘g_pSM’ was not declared in this scope
-  173 |         g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
-      |         ^~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:173:26: error: ‘Path_SM’ was not declared in this scope
-  173 |         g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
-      |                          ^~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:173:35: error: ‘fullPath’ was not declared in this scope
-  173 |         g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
-      |                                   ^~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:175:9: error: ‘IDirectory’ was not declared in this scope
-  175 |         IDirectory *dir = libsys->OpenDirectory(fullPath);
-      |         ^~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:175:21: error: ‘dir’ was not declared in this scope; did you mean ‘div’?
-  175 |         IDirectory *dir = libsys->OpenDirectory(fullPath);
-      |                     ^~~
-      |                     div
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:175:27: error: ‘libsys’ was not declared in this scope
-  175 |         IDirectory *dir = libsys->OpenDirectory(fullPath);
-      |                           ^~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:186:47: error: ‘subDir’ was not declared in this scope
-  186 |                                 g_pSM->Format(subDir, sizeof(subDir), "%s/%s", relativeDir, dir->GetEntryName());
-      |                                               ^~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:196:47: error: ‘relativePath’ was not declared in this scope; did you mean ‘relativeDir’?
-  196 |                                 g_pSM->Format(relativePath, sizeof(relativePath), "%s/%s", relativeDir, name);
-      |                                               ^~~~~~~~~~~~
-      |                                               relativeDir
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:203:16: error: type ‘<type error>’ argument given to ‘delete’, expected pointer
-  203 |         delete dir;
-      |                ^~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘void ModeGroupExtension::UnloadCurrentModePlugins()’:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:245:31: error: ‘playerhelpers’ was not declared in this scope
-  245 |         IPluginManager *mgr = playerhelpers->GetPluginManager();
-      |                               ^~~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘void ModeGroupExtension::LoadModePlugins(const std::vector<std::__cxx11::basic_string<char> >&)’:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:255:31: error: ‘playerhelpers’ was not declared in this scope
-  255 |         IPluginManager *mgr = playerhelpers->GetPluginManager();
-      |                               ^~~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:260:68: error: ‘PluginType_Private’ was not declared in this scope
-  260 |                 IPlugin *pl = mgr->LoadPlugin(file.c_str(), false, PluginType_Private, error, sizeof(error), &wasLoaded);
-      |                                                                    ^~~~~~~~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:263:25: error: ‘g_pSM’ was not declared in this scope
-  263 |                         g_pSM->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
-      |                         ^~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:263:41: error: ‘myself’ was not declared in this scope
-  263 |                         g_pSM->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
-      |                                         ^~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘void ModeGroupExtension::ApplyModeSettings(const ModeInfo&)’:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:272:36: error: ‘const struct ModeInfo’ has no member named ‘cvars’
-  272 |         for (const auto &it : mode.cvars)
-      |                                    ^~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:274:41: error: ‘class ICvar’ has no member named ‘FindConVar’; did you mean ‘FindVar’?
-  274 |                 ConVar *cvar = g_pCVar->FindConVar(it.first.c_str());
-      |                                         ^~~~~~~~~~
-      |                                         FindVar
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:277:29: error: invalid use of incomplete type ‘class ConVar’
-  277 |                         cvar->SetString(it.second.c_str());
-      |                             ^~
-In file included from /home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.h:9:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/icvar.h:18:7: note: forward declaration of ‘class ConVar’
-   18 | class ConVar;
-      |       ^~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:281:25: error: ‘g_pSM’ was not declared in this scope
-  281 |                         g_pSM->LogError(myself, "Cvar %s not found", it.first.c_str());
-      |                         ^~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:281:41: error: ‘myself’ was not declared in this scope
-  281 |                         g_pSM->LogError(myself, "Cvar %s not found", it.first.c_str());
-      |                                         ^~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:288:17: error: ‘g_pSM’ was not declared in this scope
-  288 |                 g_pSM->InsertServerCommand(cmd.c_str());
-      |                 ^~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In function ‘cell_t OnModeCommand(SourcePawn::IPluginContext*, const cell_t*)’:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:303:32: error: no matching function for call to ‘SourcePawn::IPluginContext::LocalToString(const cell_t&, char [64], long unsigned int)’
-  303 |         pContext->LocalToString(params[1], modeName, sizeof(modeName));
-      |         ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In file included from /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/IShareSys.h:41,
-                 from /home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.h:5:
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/sourcepawn/include/sp_vm_api.h:861:17: note: candidate: ‘virtual int SourcePawn::IPluginContext::LocalToString(cell_t, char**)’
-  861 |     virtual int LocalToString(cell_t local_addr, char** addr) = 0;
-      |                 ^~~~~~~~~~~~~
-/home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/sourcepawn/include/sp_vm_api.h:861:17: note:   candidate expects 2 arguments, 3 provided
+Checking CC compiler (vendor test gcc)... ['gcc-12', '-m32', 'test.c', '-o', 'test-c']
+Compiler gcc-12 for CC failed: Compiler failed with return code 1
+Skipping target x86: Unable to find a suitable C compiler
+Checking CC compiler (vendor test gcc)... ['gcc-12', '-m64', 'test.c', '-o', 'test-c']
+found gcc version 12.4, x86_64
+Checking CXX compiler (vendor test gcc)... ['g++-12', '-m64', 'test.cpp', '-o', 'test-cxx']
+found gcc version 12.4, x86_64
+[create] mkdir -p tf2_tier1
+[create] mkdir -p tf2_tier1/linux-x86_64
+[create] mkdir -p tf2_mathlib
+[create] mkdir -p tf2_mathlib/linux-x86_64
+[create] mkdir -p modegroup.ext.2.tf2
+[create] mkdir -p modegroup.ext.2.tf2/linux-x86_64
+[create] mkdir -p package
+[create] mkdir -p package/addons
+[create] mkdir -p package/addons/sourcemod
+[create] mkdir -p package/addons/sourcemod/extensions
+[create] mkdir -p package/addons/sourcemod/extensions/x64
+Spawned worker (pid: 4932)
+Spawned worker (pid: 4933)
+Spawned worker (pid: 4934)
+Spawned worker (pid: 4935)
+Spawned worker (pid: 4936)
+[4935] ln -s "/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/lib/public/linux64/libvstdlib_srv.so" "./modegroup.ext.2.tf2/linux-x86_64/libvstdlib_srv.so"
+[4935] ln -s "/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/lib/public/linux64/libtier0_srv.so" "./modegroup.ext.2.tf2/linux-x86_64/libtier0_srv.so"
+[4932] g++-12 -m64 -pipe -fno-strict-aliasing -Wall -Werror -Wno-unused -Wno-switch -Wno-array-bounds -fvisibility=hidden -msse -mfpmath=sse -Wno-maybe-uninitialized -O3 -fno-omit-frame-pointer -fPIC -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -fno-threadsafe-statics -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-register -fvisibility-inlines-hidden -std=c++17 -D_vsnprintf=vsnprintf -DHAVE_STDINT_H -DGNUC -DNDEBUG -DLINUX -D_LINUX -DPOSIX -D_FILE_OFFSET_BITS=64 -DSE_DOI=21 -DSE_CS2=25 -DSE_CONTAGION=15 -DSE_INSURGENCY=20 -DSE_CSS=6 -DSE_MOCK=26 -DSE_BMS=11 -DSE_TF2=12 -DSE_CSGO=23 -DSE_BLADE=19 -DSE_DEADLOCK=27 -DSE_LEFT4DEAD=13 -DSE_DODS=8 -DSE_EYE=5 -DSE_ALIENSWARM=17 -DSE_EPISODEONE=1 -DSE_HL2DM=7 -DSE_DARKMESSIAH=2 -DSE_BLOODYGOODTIME=4 -DSE_PVKII=10 -DSE_MCV=22 -DSE_SDK2013=9 -DSE_NUCLEARDAWN=14 -DSE_DOTA=24 -DSE_ORANGEBOX=3 -DSE_PORTAL2=18 -DSE_LEFT4DEAD2=16 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/metamod-1.12/core -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/metamod-1.12/core/sourcehook -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sdk -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/extensions -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/sourcepawn/include -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/amtl/amtl -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/amtl -MD -MF _home_runner_work_SM_ModeGroups_SM_ModeGroups_sourcemod_1_12_public_amtl_compat_stdcxx.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/amtl/compat/stdcxx.cpp -o _home_runner_work_SM_ModeGroups_SM_ModeGroups_sourcemod_1_12_public_amtl_compat_stdcxx.o
+[4935] g++-12 -m64 -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -MD -MF vector.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib/vector.cpp -o vector.o
+[4936] g++-12 -m64 -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -MD -MF vmatrix.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib/vmatrix.cpp -o vmatrix.o
+[4934] g++-12 -m64 -pipe -fno-strict-aliasing -Wall -Werror -Wno-unused -Wno-switch -Wno-array-bounds -fvisibility=hidden -msse -mfpmath=sse -Wno-maybe-uninitialized -O3 -fno-omit-frame-pointer -fPIC -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -fno-threadsafe-statics -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-register -fvisibility-inlines-hidden -std=c++17 -D_vsnprintf=vsnprintf -DHAVE_STDINT_H -DGNUC -DNDEBUG -DLINUX -D_LINUX -DPOSIX -D_FILE_OFFSET_BITS=64 -DSE_DOI=21 -DSE_CS2=25 -DSE_CONTAGION=15 -DSE_INSURGENCY=20 -DSE_CSS=6 -DSE_MOCK=26 -DSE_BMS=11 -DSE_TF2=12 -DSE_CSGO=23 -DSE_BLADE=19 -DSE_DEADLOCK=27 -DSE_LEFT4DEAD=13 -DSE_DODS=8 -DSE_EYE=5 -DSE_ALIENSWARM=17 -DSE_EPISODEONE=1 -DSE_HL2DM=7 -DSE_DARKMESSIAH=2 -DSE_BLOODYGOODTIME=4 -DSE_PVKII=10 -DSE_MCV=22 -DSE_SDK2013=9 -DSE_NUCLEARDAWN=14 -DSE_DOTA=24 -DSE_ORANGEBOX=3 -DSE_PORTAL2=18 -DSE_LEFT4DEAD2=16 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/metamod-1.12/core -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/metamod-1.12/core/sourcehook -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sdk -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/extensions -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/sourcepawn/include -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/amtl/amtl -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/amtl -MD -MF _home_runner_work_SM_ModeGroups_SM_ModeGroups_sourcemod_1_12_public_smsdk_ext.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/smsdk_ext.cpp -o _home_runner_work_SM_ModeGroups_SM_ModeGroups_sourcemod_1_12_public_smsdk_ext.o
+[4932] g++-12 -m64 -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -MD -MF ssenoise.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib/ssenoise.cpp -o ssenoise.o
+[4935] g++-12 -m64 -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -MD -MF sseconst.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib/sseconst.cpp -o sseconst.o
+[4936] g++-12 -m64 -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -MD -MF sse.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib/sse.cpp -o sse.o
+[4932] g++-12 -m64 -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -MD -MF sparse_convolution_noise.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib/sparse_convolution_noise.cpp -o sparse_convolution_noise.o
+[4934] g++-12 -m64 -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -MD -MF spherical.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib/spherical.cpp -o spherical.o
+[4935] g++-12 -m64 -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -MD -MF simdvectormatrix.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib/simdvectormatrix.cpp -o simdvectormatrix.o
+In file included from /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib/simdvectormatrix.h:21,
+                 from /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/mathlib/simdvectormatrix.cpp:14:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1/utlsoacontainer.h:314:62: warning: ignoring attributes on template argument ‘fltx4’ {aka ‘__m128’} [-Wignored-attributes]
+  314 | class CFltX4AttributeIterator : public CStridedConstPtr<fltx4>
+      |                                                              ^
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1/utlsoacontainer.h: In constructor ‘CFltX4AttributeIterator::CFltX4AttributeIterator(const CSOAContainer*, int, int)’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1/utlsoacontainer.h:317:41: warning: ignoring attributes on template argument ‘fltx4’ {aka ‘__m128’} [-Wignored-attributes]
+  317 |                 : CStridedConstPtr<fltx4>( pContainer->ConstRowPtr( nAttribute, nRowNumber),
+      |                                         ^
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1/utlsoacontainer.h: At global scope:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1/utlsoacontainer.h:323:62: warning: ignoring attributes on template argument ‘fltx4’ {aka ‘__m128’} [-Wignored-attributes]
+  323 | class CFltX4AttributeWriteIterator : public CStridedPtr<fltx4>
+      |                                                              ^
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1/utlsoacontainer.h: In constructor ‘CFltX4AttributeWriteIterator::CFltX4AttributeWriteIterator(const CSOAContainer*, int, int)’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1/utlsoacontainer.h:326:36: warning: ignoring attributes on template argument ‘fltx4’ {aka ‘__m128’} [-Wignored-attributes]
+  326 |                 : CStridedPtr<fltx4>( pContainer->RowPtr( nAttribute, nRowNumber),
+      |                                    ^
 At global scope:
 cc1plus: note: unrecognized command-line option ‘-Wno-undefined-bool-conversion’ may have been intended to silence earlier diagnostics
 cc1plus: note: unrecognized command-line option ‘-Wno-tautological-constant-out-of-range-compare’ may have been intended to silence earlier diagnostics
 cc1plus: note: unrecognized command-line option ‘-Wno-tautological-overlap-compare’ may have been intended to silence earlier diagnostics
 cc1plus: note: unrecognized command-line option ‘-Wno-inconsistent-missing-override’ may have been intended to silence earlier diagnostics
 cc1plus: note: unrecognized command-line option ‘-Wno-unused-private-field’ may have been intended to silence earlier diagnostics
-Build failed: ModeGroups.ext.2.tf2/linux-x86_64/extension.d
+[4933] g++-12 -m64 -pipe -fno-strict-aliasing -Wall -Werror -Wno-unused -Wno-switch -Wno-array-bounds -fvisibility=hidden -msse -mfpmath=sse -Wno-maybe-uninitialized -O3 -fno-omit-frame-pointer -fPIC -Wno-overloaded-virtual -Wno-unused-function -Wno-unknown-pragmas -Wno-dangling-else -Wno-unused-variable -Wno-unused-private-field -Wno-inconsistent-missing-override -Wno-tautological-overlap-compare -Wno-tautological-constant-out-of-range-compare -Wno-undefined-bool-conversion -fPIC -march=nocona -march=core2 -fno-threadsafe-statics -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-register -fvisibility-inlines-hidden -std=c++17 -D_vsnprintf=vsnprintf -DHAVE_STDINT_H -DGNUC -DNDEBUG -DLINUX -D_LINUX -DPOSIX -D_FILE_OFFSET_BITS=64 -DSE_DOI=21 -DSE_CS2=25 -DSE_CONTAGION=15 -DSE_INSURGENCY=20 -DSE_CSS=6 -DSE_MOCK=26 -DSE_BMS=11 -DSE_TF2=12 -DSE_CSGO=23 -DSE_BLADE=19 -DSE_DEADLOCK=27 -DSE_LEFT4DEAD=13 -DSE_DODS=8 -DSE_EYE=5 -DSE_ALIENSWARM=17 -DSE_EPISODEONE=1 -DSE_HL2DM=7 -DSE_DARKMESSIAH=2 -DSE_BLOODYGOODTIME=4 -DSE_PVKII=10 -DSE_MCV=22 -DSE_SDK2013=9 -DSE_NUCLEARDAWN=14 -DSE_DOTA=24 -DSE_ORANGEBOX=3 -DSE_PORTAL2=18 -DSE_LEFT4DEAD2=16 -DSOURCE_ENGINE=12 -DGAME_DLL -DRAD_TELEMETRY_DISABLED -DCOMPILER_GCC -D_LINUX -DLINUX -DPOSIX -DGNUC -DX64BITS -DPLATFORM_64BITS -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE -DTF_DLL -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/metamod-1.12/core -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/metamod-1.12/core/sourcehook -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/engine -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/mathlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/vstdlib -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier0 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/tier1 -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/toolframework -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/public/game/server -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/game/shared -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/hl2sdk-tf2/common -I /home/runner/work/SM-ModeGroups/SM-ModeGroups -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sdk -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/extensions -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/sourcepawn/include -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/amtl/amtl -I /home/runner/work/SM-ModeGroups/SM-ModeGroups/sourcemod-1.12/public/amtl -MD -MF extension.d -c /home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp -o extension.o
+In file included from /home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:1:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.h:27:47: error: expected class-name before ‘,’ token
+   27 | class ModeGroupExtension : public SDKExtension, public IPluginsListener
+      |                                               ^
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘virtual bool ModeGroupExtension::SDK_OnLoad(char*, size_t, bool)’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:21:5: error: ‘sharesys’ was not declared in this scope
+   21 |     sharesys->AddInterface(myself, this);
+      |     ^~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:21:28: error: ‘myself’ was not declared in this scope
+   21 |     sharesys->AddInterface(myself, this);
+      |                            ^~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:30:5: error: ‘playerhelpers’ was not declared in this scope
+   30 |     playerhelpers->GetPluginManager()->AddPluginsListener(this);
+      |     ^~~~~~~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘virtual void ModeGroupExtension::SDK_OnUnload()’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:46:5: error: ‘playerhelpers’ was not declared in this scope
+   46 |     playerhelpers->GetPluginManager()->RemovePluginsListener(this);
+      |     ^~~~~~~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘bool ModeGroupExtension::LoadConfig()’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:82:15: error: ‘PLATFORM_MAX_PATH’ was not declared in this scope
+   82 |     char path[PLATFORM_MAX_PATH];
+      |               ^~~~~~~~~~~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:83:5: error: ‘g_pSM’ was not declared in this scope
+   83 |     g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
+      |     ^~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:83:22: error: ‘Path_SM’ was not declared in this scope
+   83 |     g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
+      |                      ^~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:83:31: error: ‘path’ was not declared in this scope
+   83 |     g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
+      |                               ^~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:85:5: error: ‘IKeyValues’ was not declared in this scope; did you mean ‘KeyValues’?
+   85 |     IKeyValues *kv = new CKeyValues("ModeGroups");
+      |     ^~~~~~~~~~
+      |     KeyValues
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:85:17: error: ‘kv’ was not declared in this scope; did you mean ‘ke’?
+   85 |     IKeyValues *kv = new CKeyValues("ModeGroups");
+      |                 ^~
+      |                 ke
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:85:26: error: expected type-specifier before ‘CKeyValues’
+   85 |     IKeyValues *kv = new CKeyValues("ModeGroups");
+      |                          ^~~~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:88:16: error: type ‘<type error>’ argument given to ‘delete’, expected pointer
+   88 |         delete kv;
+      |                ^~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:94:16: error: type ‘<type error>’ argument given to ‘delete’, expected pointer
+   94 |         delete kv;
+      |                ^~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:98:22: error: ‘sub’ was not declared in this scope; did you mean ‘fsub’?
+   98 |     for (IKeyValues *sub = kv->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+      |                      ^~~
+      |                      fsub
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:113:30: error: ‘p’ was not declared in this scope; did you mean ‘sp’?
+  113 |             for (IKeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
+      |                              ^
+      |                              sp
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:127:30: error: ‘p’ was not declared in this scope; did you mean ‘sp’?
+  127 |             for (IKeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
+      |                              ^
+      |                              sp
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:137:30: error: ‘p’ was not declared in this scope; did you mean ‘sp’?
+  137 |             for (IKeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
+      |                              ^
+      |                              sp
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:151:12: error: type ‘<type error>’ argument given to ‘delete’, expected pointer
+  151 |     delete kv;
+      |            ^~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘void ModeGroupExtension::CollectPluginsFromDir(const char*, std::vector<std::__cxx11::basic_string<char> >&, bool)’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:157:19: error: ‘PLATFORM_MAX_PATH’ was not declared in this scope
+  157 |     char fullPath[PLATFORM_MAX_PATH];
+      |                   ^~~~~~~~~~~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:158:5: error: ‘g_pSM’ was not declared in this scope
+  158 |     g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
+      |     ^~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:158:22: error: ‘Path_SM’ was not declared in this scope
+  158 |     g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
+      |                      ^~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:158:31: error: ‘fullPath’ was not declared in this scope
+  158 |     g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
+      |                               ^~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:160:23: error: ‘libsys’ was not declared in this scope
+  160 |     IDirectory *dir = libsys->OpenDirectory(fullPath);
+      |                       ^~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:171:31: error: ‘subDir’ was not declared in this scope
+  171 |                 g_pSM->Format(subDir, sizeof(subDir), "%s/%s", relativeDir, dir->GetEntryName());
+      |                               ^~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:181:31: error: ‘relativePath’ was not declared in this scope; did you mean ‘relativeDir’?
+  181 |                 g_pSM->Format(relativePath, sizeof(relativePath), "%s/%s", relativeDir, name);
+      |                               ^~~~~~~~~~~~
+      |                               relativeDir
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:187:10: error: ‘class SourceMod::IDirectory’ has no member named ‘Close’
+  187 |     dir->Close();
+      |          ^~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘void ModeGroupExtension::UnloadCurrentModePlugins()’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:193:27: error: ‘playerhelpers’ was not declared in this scope
+  193 |     IPluginManager *mgr = playerhelpers->GetPluginManager();
+      |                           ^~~~~~~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘void ModeGroupExtension::LoadModePlugins(const std::vector<std::__cxx11::basic_string<char> >&)’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:203:27: error: ‘playerhelpers’ was not declared in this scope
+  203 |     IPluginManager *mgr = playerhelpers->GetPluginManager();
+      |                           ^~~~~~~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:209:60: error: ‘PluginType_Private’ was not declared in this scope
+  209 |         IPlugin *pl = mgr->LoadPlugin(file.c_str(), false, PluginType_Private, error, sizeof(error), &wasLoaded);
+      |                                                            ^~~~~~~~~~~~~~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:212:13: error: ‘g_pSM’ was not declared in this scope
+  212 |             g_pSM->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
+      |             ^~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:212:29: error: ‘myself’ was not declared in this scope
+  212 |             g_pSM->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
+      |                             ^~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In member function ‘void ModeGroupExtension::ApplyModeSettings(const ModeInfo&)’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:224:19: error: ‘class ConVar’ has no member named ‘SetString’; did you mean ‘GetString’?
+  224 |             cvar->SetString(it.second.c_str());
+      |                   ^~~~~~~~~
+      |                   GetString
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:228:13: error: ‘g_pSM’ was not declared in this scope
+  228 |             g_pSM->LogError(myself, "Cvar %s not found", it.first.c_str());
+      |             ^~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:228:29: error: ‘myself’ was not declared in this scope
+  228 |             g_pSM->LogError(myself, "Cvar %s not found", it.first.c_str());
+      |                             ^~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:234:9: error: ‘g_pSM’ was not declared in this scope
+  234 |         g_pSM->InsertServerCommand(cmd.c_str());
+      |         ^~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp: In static member function ‘static void ModeGroupExtension::OnModeCommand(const CCommand&)’:
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:267:9: error: ‘g_pSM’ was not declared in this scope
+  267 |         g_pSM->LogMessage(myself, "Usage: sm_mode <modename>");
+      |         ^~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:267:27: error: ‘myself’ was not declared in this scope
+  267 |         g_pSM->LogMessage(myself, "Usage: sm_mode <modename>");
+      |                           ^~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:274:9: error: ‘g_pSM’ was not declared in this scope
+  274 |         g_pSM->LogMessage(myself, "Switched to mode '%s'", modeName);
+      |         ^~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:274:27: error: ‘myself’ was not declared in this scope
+  274 |         g_pSM->LogMessage(myself, "Switched to mode '%s'", modeName);
+      |                           ^~~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:278:9: error: ‘g_pSM’ was not declared in this scope
+  278 |         g_pSM->LogMessage(myself, "Unknown mode '%s'", modeName);
+      |         ^~~~~
+/home/runner/work/SM-ModeGroups/SM-ModeGroups/extension.cpp:278:27: error: ‘myself’ was not declared in this scope
+  278 |         g_pSM->LogMessage(myself, "Unknown mode '%s'", modeName);
+      |                           ^~~~~~
+At global scope:
+cc1plus: note: unrecognized command-line option ‘-Wno-undefined-bool-conversion’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-tautological-constant-out-of-range-compare’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-tautological-overlap-compare’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-inconsistent-missing-override’ may have been intended to silence earlier diagnostics
+cc1plus: note: unrecognized command-line option ‘-Wno-unused-private-field’ may have been intended to silence earlier diagnostics
+Build failed: modegroup.ext.2.tf2/linux-x86_64/extension.d
 Error: 进程已结束，退出代码为 1.

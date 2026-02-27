@@ -1,8 +1,4 @@
 #include "extension.h"
-#include <filesystem.h> 
-#include <convar.h> 
-#include <sm_stringhashmap.h> 
-#include <sh_string.h>
 
 ModeGroupExtension g_ModeGroup;
 SMEXT_LINK(g_ModeGroup);
@@ -27,7 +23,11 @@ bool ModeGroupExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
         return false;
     }
 
-    playerhelpers->GetPluginManager()->AddPluginsListener(this);
+    IPlayerHelpers *playerhelpers = (IPlayerHelpers *)sharesys->RequestInterface(IPlayerHelpers_Name);
+    if (playerhelpers)
+    {
+        playerhelpers->GetPluginManager()->AddPluginsListener(this);
+    }
 
     m_pModeCommand = new ConCommand("sm_mode", OnModeCommand, "Switch game mode (see modegroup.cfg)", FCVAR_SPONLY | FCVAR_GAMEDLL);
     g_pCVar->RegisterConCommand(m_pModeCommand);
@@ -43,7 +43,11 @@ void ModeGroupExtension::SDK_OnUnload()
 {
     UnloadCurrentModePlugins();
 
-    playerhelpers->GetPluginManager()->RemovePluginsListener(this);
+    IPlayerHelpers *playerhelpers = (IPlayerHelpers *)sharesys->RequestInterface(IPlayerHelpers_Name);
+    if (playerhelpers)
+    {
+        playerhelpers->GetPluginManager()->RemovePluginsListener(this);
+    }
 
     if (m_pModeCommand)
     {
@@ -82,20 +86,20 @@ bool ModeGroupExtension::LoadConfig()
     char path[PLATFORM_MAX_PATH];
     g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
 
-    IKeyValues *kv = new CKeyValues("ModeGroups");
+    KeyValues *kv = new KeyValues("ModeGroups");
     if (!kv->LoadFromFile(g_pSM->GetFileSystem(), path))
     {
-        delete kv;
+        kv->deleteThis();
         return false;
     }
 
     if (!kv->JumpToKey("ModeGroups"))
     {
-        delete kv;
+        kv->deleteThis();
         return false;
     }
 
-    for (IKeyValues *sub = kv->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+    for (KeyValues *sub = kv->GetFirstSubKey(); sub; sub = sub->GetNextKey())
     {
         ModeInfo info;
         info.name = sub->GetName();
@@ -110,7 +114,7 @@ bool ModeGroupExtension::LoadConfig()
         // plugins list
         if (sub->JumpToKey("plugins"))
         {
-            for (IKeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
+            for (KeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
             {
                 const char *fileName = p->GetString();
                 if (fileName && fileName[0])
@@ -124,7 +128,7 @@ bool ModeGroupExtension::LoadConfig()
         // cvars
         if (sub->JumpToKey("cvars"))
         {
-            for (IKeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
+            for (KeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
             {
                 info.cvars[p->GetName()] = p->GetString();
             }
@@ -134,7 +138,7 @@ bool ModeGroupExtension::LoadConfig()
         // commands
         if (sub->JumpToKey("commands"))
         {
-            for (IKeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
+            for (KeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
             {
                 const char *cmd = p->GetString();
                 if (cmd && cmd[0])
@@ -148,7 +152,7 @@ bool ModeGroupExtension::LoadConfig()
         m_Modes.push_back(info);
     }
 
-    delete kv;
+    kv->deleteThis();
     return true;
 }
 
@@ -156,6 +160,10 @@ void ModeGroupExtension::CollectPluginsFromDir(const char *relativeDir, std::vec
 {
     char fullPath[PLATFORM_MAX_PATH];
     g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
+
+    ILibrarySys *libsys = (ILibrarySys *)sharesys->RequestInterface(ILibrarySys_Name);
+    if (!libsys)
+        return;
 
     IDirectory *dir = libsys->OpenDirectory(fullPath);
     if (!dir)
@@ -184,32 +192,39 @@ void ModeGroupExtension::CollectPluginsFromDir(const char *relativeDir, std::vec
         }
         dir->NextEntry();
     }
-    dir->Close();
-    delete dir;
+    dir->Release();
 }
 
 void ModeGroupExtension::UnloadCurrentModePlugins()
 {
-    IPluginManager *mgr = playerhelpers->GetPluginManager();
-    for (IPlugin *pl : m_LoadedPlugins)
+    IPlayerHelpers *playerhelpers = (IPlayerHelpers *)sharesys->RequestInterface(IPlayerHelpers_Name);
+    if (playerhelpers)
     {
-        mgr->UnloadPlugin(pl);
+        IPluginManager *mgr = playerhelpers->GetPluginManager();
+        for (IPlugin *pl : m_LoadedPlugins)
+        {
+            mgr->UnloadPlugin(pl);
+        }
     }
     m_LoadedPlugins.clear();
 }
 
 void ModeGroupExtension::LoadModePlugins(const std::vector<std::string> &files)
 {
-    IPluginManager *mgr = playerhelpers->GetPluginManager();
-    for (const std::string &file : files)
+    IPlayerHelpers *playerhelpers = (IPlayerHelpers *)sharesys->RequestInterface(IPlayerHelpers_Name);
+    if (playerhelpers)
     {
-        char error[255];
-        bool wasLoaded = false;
-
-        IPlugin *pl = mgr->LoadPlugin(file.c_str(), false, PluginType_Private, error, sizeof(error), &wasLoaded);
-        if (!pl)
+        IPluginManager *mgr = playerhelpers->GetPluginManager();
+        for (const std::string &file : files)
         {
-            g_pSM->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
+            char error[255];
+            bool wasLoaded = false;
+
+            IPlugin *pl = mgr->LoadPlugin(file.c_str(), false, SourceMod::PluginType_Private, error, sizeof(error), &wasLoaded);
+            if (!pl)
+            {
+                g_pSM->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
+            }
         }
     }
 }
@@ -221,7 +236,7 @@ void ModeGroupExtension::ApplyModeSettings(const ModeInfo &mode)
         ConVar *cvar = g_pCVar->FindVar(it.first.c_str());
         if (cvar)
         {
-            cvar->SetString(it.second.c_str());
+            cvar->SetValue(it.second.c_str());
         }
         else
         {
