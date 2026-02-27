@@ -8,58 +8,57 @@
 #include <IHandleSys.h>
 #include <icvar.h>
 #include <KeyValues.h>
+#include <ILibrarySys.h>
+#include <IPlayerHelpers.h> 
 #include <vector>
 #include <string>
+#include <map>
 
 using namespace SourceMod;
 
-/**
- * @brief Mode information structure
- */
 struct ModeInfo
 {
-	std::string name;
-	std::vector<std::string> pluginFiles;      // Relative paths from plugins folder
-	std::map<std::string, std::string> cvars;
-	std::vector<std::string> commands;
+    std::string name;
+    std::vector<std::string> pluginFiles;
+    std::map<std::string, std::string> cvars;
+    std::vector<std::string> commands;
 };
 
-/**
- * @brief ModeGroup extension class
- */
 class ModeGroupExtension : public SDKExtension, public IPluginsListener
 {
 public:
-	ModeGroupExtension();
-	virtual ~ModeGroupExtension();
+    ModeGroupExtension();
+    virtual ~ModeGroupExtension();
 
-	// SDKExtension overrides
-	virtual bool SDK_OnLoad(char *error, size_t maxlen, bool late);
-	virtual void SDK_OnAllLoaded();
-	virtual void SDK_OnUnload();
-	virtual void SDK_OnPauseChange(bool paused);
+    // SDKExtension overrides
+    virtual bool SDK_OnLoad(char *error, size_t maxlen, bool late);
+    virtual void SDK_OnAllLoaded();
+    virtual void SDK_OnUnload();
+    virtual void SDK_OnPauseChange(bool paused);
 
-	// IPluginsListener overrides
-	virtual void OnPluginLoaded(IPlugin *plugin);
-	virtual void OnPluginUnloaded(IPlugin *plugin);
+    // IPluginsListener overrides
+    virtual void OnPluginLoaded(IPlugin *plugin);
+    virtual void OnPluginUnloaded(IPlugin *plugin);
 
-	// Public methods
-	bool LoadConfig();
-	bool SwitchToMode(const char *modeName);
-	const char *GetCurrentMode() const { return m_CurrentMode.c_str(); }
-	const std::vector<ModeInfo> &GetModes() const { return m_Modes; }
+    // Public methods
+    bool LoadConfig();
+    bool SwitchToMode(const char *modeName);
+    const char *GetCurrentMode() const { return m_CurrentMode.c_str(); }
 
 private:
-	void CollectPluginsFromDir(const char *relativeDir, std::vector<std::string> &outFiles, bool recursive);
-	void UnloadCurrentModePlugins();
-	void LoadModePlugins(const std::vector<std::string> &files);
-	void ApplyModeSettings(const ModeInfo &mode);
-	void ClearPluginList();
+    void CollectPluginsFromDir(const char *relativeDir, std::vector<std::string> &outFiles, bool recursive);
+    void UnloadCurrentModePlugins();
+    void LoadModePlugins(const std::vector<std::string> &files);
+    void ApplyModeSettings(const ModeInfo &mode);
 
-	std::vector<ModeInfo> m_Modes;
-	std::string m_CurrentMode;
-	std::vector<IPlugin *> m_LoadedPlugins;   // Plugins loaded by current mode
-	bool m_IsSwitching;                         // Flag to distinguish our own loads
+    std::vector<ModeInfo> m_Modes;
+    std::string m_CurrentMode;
+    std::vector<IPlugin *> m_LoadedPlugins;
+    bool m_IsSwitching;
+
+    // 控制台命令处理
+    static void OnModeCommand(const CCommand &command);
+    ConCommand *m_pModeCommand;
 };
 
 extern ModeGroupExtension g_ModeGroup;
