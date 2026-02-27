@@ -44,6 +44,7 @@ private:
     IPluginManager *m_pPluginSys = nullptr;
     ITextParsers *m_pTextParsers = nullptr;
     IGameHelpers *m_pGameHelpers = nullptr;
+    ICvar *m_pCVar = nullptr;
 };
 
 extern ModeGroupExt g_ModeGroupExt;
