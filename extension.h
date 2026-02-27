@@ -7,7 +7,6 @@
 #include <vector>
 #include <string>
 
-// 必须在包含 tier1 头文件前取消定义，防止与 SM 冲突
 #if defined CVAR_INTERFACE_VERSION
 #undef CVAR_INTERFACE_VERSION
 #endif

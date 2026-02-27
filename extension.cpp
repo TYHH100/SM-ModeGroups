@@ -65,17 +65,13 @@ void Command_SwitchMode(const CCommand &command) {
 ConCommand sm_mode("sm_mode", Command_SwitchMode, "切换插件分组模式", FCVAR_NONE);
 
 bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
-    // 关键修复：确保接口在注册指令前已连接
-    if (!g_pCVar) {
-        snprintf(error, maxlength, "无法连接到 ICvar 接口，请确保 Metamod 已运行");
-        return false;
-    }
 
     SM_GET_IFACE(PLUGINSYSTEM, m_pPluginSys);
     SM_GET_IFACE(TEXTPARSERS, m_pTextParsers);
     SM_GET_IFACE(GAMEHELPERS, m_pGameHelpers);
+    SM_GET_IFACE(CVAR, g_pCVar);
 
-    if (!m_pPluginSys || !m_pTextParsers) {
+    if (!m_pPluginSys || !m_pTextParsers || !g_pCVar) {
         snprintf(error, maxlength, "必要的 SourceMod 接口初始化失败");
         return false;
     }
@@ -97,7 +93,7 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     SMCError err = m_pTextParsers->ParseSMCFile(configPath, &parser, nullptr, nullptr, 0);
 
     if (err != SMCError_Okay || !parser.found) {
-        g_pSM->LogError(myself, "Failed to load mode '%s'", modeName);
+        g_pSM->LogError(myself, "模式切换失败: 配置文件中未找到模式 [%s]", modeName);
         return false;
     }
 
@@ -105,25 +101,24 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     UnloadCurrentModePlugins();
 
     // 2. 递归扫描并加载新插件
-    if (!parser.pluginDir.empty()) {
+    if (!parser.pluginPath.empty()) {
         char fullPath[PLATFORM_MAX_PATH];
-        g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", parser.pluginDir.c_str());
+        g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", parser.pluginPath.c_str());
         ScanAndLoadPlugins(fullPath);
     }
 
     // 3. 应用 Cvars
     for (const auto& cv : parser.cvars) {
-        ConVar* pCvar = g_pCVar->FindVar(cv.first.c_str());
-        if (pCvar) pCvar->SetValue(cv.second.c_str());
+        ConVar* pVar = g_pCVar->FindVar(cv.first.c_str());
+        if (pVar) pVar->SetValue(cv.second.c_str());
     }
 
-    // 4. 执行配置文件中的 commands              
-    for (const auto& cmd : parser.commands) {                
-        // 使用 IGameHelpers 执行指令比直接用引擎指针更安全
+    // 4. 执行 Commands
+    for (const auto& cmd : parser.commands) {
         if (m_pGameHelpers) m_pGameHelpers->ServerCommand(cmd.c_str());
     }
 
-    g_pSM->LogMessage(myself, "Mode switched to: %s", modeName);
+    g_pSM->LogMessage(myself, "已切换至模式 [%s]，加载了 %d 个插件", modeName, (int)m_LoadedPlugins.size());
     return true;
 }
 
