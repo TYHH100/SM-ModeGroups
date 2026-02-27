@@ -43,10 +43,17 @@ jobs:
         run: |
           cp -r ${{ github.workspace }}/asm ${{ github.workspace }}/sourcemod-1.12/public/asm
 
-      - name: Copy libudis86
-        run: |
-          cp -r ${{ github.workspace }}/libudis86 ${{ github.workspace }}/sourcemod-1.12/public/asm/libudis86
-          ls ${{ github.workspace }}/sourcemod-1.12/public/asm/libudis86
+      # - name: Copy libudis86
+      #   run: |
+      #     cp -r ${{ github.workspace }}/libudis86 ${{ github.workspace }}/sourcemod-1.12/public/asm/libudis86
+      #     ls ${{ github.workspace }}/sourcemod-1.12/public/asm/libudis86
+
+      - name: Checking out SourceMod
+        uses: actions/checkout@v6
+        with:
+          repository: vmt/udis86
+          ref: master
+          path: ${{ github.workspace }}/sourcemod-1.12/public/udis86
 
       - name: Checking out MM:Source
         uses: actions/checkout@v6
