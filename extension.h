@@ -6,42 +6,25 @@
 #include <IGameHelpers.h>
 #include <vector>
 #include <string>
-#include <tier1/convar.h>
 
-#if defined _DEBUG
-#undef _DEBUG
-#endif
+// Include convar.h for ConCommand/ConVar types, but NOT icvar.h
 #include <tier1/convar.h>
 
 class ModeGroupExt : public SDKExtension
 {
 public:
-    virtual bool SDK_OnLoad(char *error, size_t maxlength, bool late);
-    virtual void SDK_OnUnload();
-
-public:
-    // 切换模式的核心函数
+    virtual bool SDK_OnLoad(char *error, size_t maxlength, bool late) override;
+    virtual void SDK_OnUnload() override;
     bool SwitchMode(const char* modeName);
 
 private:
-    // 卸载当前组的插件 
     void UnloadCurrentModePlugins();
     
-    // 递归加载目录或单文件 
-    void LoadPluginsRecursively(const std::string& path);
-    
-    // 执行配置中的 Cvars 和 Commands 
-    void ExecuteCommandsAndCvars(const std::vector<std::pair<std::string, std::string>>& cvars, 
-                                 const std::vector<std::string>& commands);
-
-private:
     std::vector<IPlugin*> m_LoadedPlugins;
-    std::string m_CurrentMode = "none";
     IPluginManager *m_pPluginSys = nullptr;
     ITextParsers *m_pTextParsers = nullptr;
     IGameHelpers *m_pGameHelpers = nullptr;
 };
-#endif
 
 extern ModeGroupExt g_ModeGroupExt;
 
