@@ -9,7 +9,7 @@
 #include <ILibrarySys.h>
 #include <IPlayerHelpers.h>
 #include <ISourceMod.h>
-#include <ICvar.h>
+#include <icvar.h>
 #include <vector>
 #include <string>
 #include <map>
