@@ -1,15 +1,7 @@
 #include "extension.h"
 #include <filesystem>
-#include <ITextParsers.h>
 #include <string>
 #include <vector>
-
-#if defined CVAR_INTERFACE_VERSION
-#undef CVAR_INTERFACE_VERSION
-#endif
-
-#include <eiface.h>
-#include <icvar.h>
 
 namespace fs = std::filesystem;
 
@@ -68,12 +60,7 @@ ConCommand sm_mode("sm_mode", Command_SwitchMode, "Switch mode group", FCVAR_NON
 bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
     SM_GET_IFACE(PLUGINSYSTEM, m_pPluginSys);
     SM_GET_IFACE(TEXTPARSERS, m_pTextParsers);
-    
-    IGameHelpers *gamehelpers = nullptr;
-    SM_GET_LATE_IFACE(GAMEHELPERS, gamehelpers);
-    if (gamehelpers) {
-        m_pEngine = gamehelpers->GetEngine();
-    }
+    SM_GET_IFACE(GAMEHELPERS, m_pGameHelpers);
     
     g_pCVar->RegisterConCommand(&sm_mode);
     return true;
@@ -120,12 +107,9 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     }
 
     for (const auto& cmd : parser.commands) {
-        if (m_pEngine) {
-            m_pEngine->ServerCommand(cmd.c_str());
+        if (m_pGameHelpers) {
+            m_pGameHelpers->ServerCommand(cmd.c_str());
         }
-    }
-    if (m_pEngine) {
-        m_pEngine->ServerExecute();
     }
 
     return true;

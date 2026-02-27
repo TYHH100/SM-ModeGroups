@@ -7,11 +7,6 @@
 #include <vector>
 #include <string>
 
-#if defined CVAR_INTERFACE_VERSION
-#undef CVAR_INTERFACE_VERSION
-#endif
-#include <eiface.h>
-
 class ModeGroupExt : public SDKExtension
 {
 public:
@@ -36,9 +31,9 @@ private:
 private:
     std::vector<IPlugin*> m_LoadedPlugins;
     std::string m_CurrentMode = "none";
-    IPluginSys *m_pPluginSys = nullptr;
-    ITextParsers *m_pTextParsers = nullptr;
-    IVEngineServer *m_pEngine = nullptr;
+    SourceMod::IPluginSys *m_pPluginSys = nullptr;
+    SourceMod::ITextParsers *m_pTextParsers = nullptr;
+    SourceMod::IGameHelpers *m_pGameHelpers = nullptr;
 };
 
 extern ModeGroupExt g_ModeGroupExt;
