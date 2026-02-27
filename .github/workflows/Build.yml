@@ -42,8 +42,8 @@ jobs:
 
       - name: Copy asm libudis86
         run: |
-          cp -r /asm ${{ github.workspace }}/sourcemod-1.12/public/asm
-          cp -r /libudis86 ${{ github.workspace }}/sourcemod-1.12/public/libudis86
+          cp -r ${{ github.workspace }}/asm ${{ github.workspace }}/sourcemod-1.12/public/asm
+          cp -r ${{ github.workspace }}/libudis86 ${{ github.workspace }}/sourcemod-1.12/public/libudis86
 
       - name: Checking out MM:Source
         uses: actions/checkout@v6
