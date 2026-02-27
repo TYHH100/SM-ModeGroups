@@ -40,13 +40,6 @@ jobs:
           path: sourcemod-1.12
           submodules: recursive
 
-      - name: Checking out safetyhook
-        uses: actions/checkout@v6
-        with:
-          repository: alliedmodders/safetyhook
-          ref: main
-          path: ${{ github.workspace }}/sourcemod-1.12/public/safetyhook
-
       - name: Checking out MM:Source
         uses: actions/checkout@v6
         with:
