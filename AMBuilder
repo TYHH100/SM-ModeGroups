@@ -1,5 +1,4 @@
 # vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
-from setuptools import Extension
 import os
 
 # Name of your extesion, this will also be it's file name.
