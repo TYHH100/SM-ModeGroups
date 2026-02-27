@@ -1,6 +1,10 @@
 name: Build Extension
 
 on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -53,7 +57,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.10'
 
       - name: Setting up ambuild
         working-directory: ambuild
@@ -68,19 +72,19 @@ jobs:
           ref: master
           path: hl2sdk-manifests
 
-      # - name: Checking out hl2sdk-tf2
-      #   uses: actions/checkout@v6
-      #   with:
-      #     repository: alliedmodders/hl2sdk
-      #     ref: tf2
-      #     path: hl2sdk-tf2
+      - name: Checking out hl2sdk-tf2
+        uses: actions/checkout@v6
+        with:
+          repository: alliedmodders/hl2sdk
+          ref: tf2
+          path: hl2sdk-tf2
 
-      # - name: Checking out hl2sdk-sdk2013
-      #   uses: actions/checkout@v6
-      #   with:
-      #     repository: alliedmodders/hl2sdk
-      #     ref: sdk2013
-      #     path: hl2sdk-sdk2013
+      - name: Checking out hl2sdk-sdk2013
+        uses: actions/checkout@v6
+        with:
+          repository: alliedmodders/hl2sdk
+          ref: sdk2013
+          path: hl2sdk-sdk2013
 
       - name: Configure and Build
         run: |
