@@ -296,8 +296,6 @@ class ExtensionConfig(object):
     cxx.linkflags += ['-lm']
     if cxx.family == 'gcc':
       cxx.linkflags += ['-static-libgcc']
-      # Link with stdc++fs for C++17 filesystem support (only needed for GCC)
-      cxx.linkflags += ['-lstdc++fs']
     elif cxx.family == 'clang':
       cxx.linkflags += ['-lgcc_eh']
     cxx.linkflags += ['-static-libstdc++']

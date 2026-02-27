@@ -63,9 +63,20 @@ void Command_SwitchMode(const CCommand &command) {
 ConCommand sm_mode("sm_mode", Command_SwitchMode, "Switch mode group", FCVAR_NONE);
 
 bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
+    // Check if the global ICvar interface provided by Metamod/SourceSDK is valid
+    if (!g_pCVar) {
+        snprintf(error, maxlength, "Could not find ICvar interface");
+        return false;
+    }
+
     SM_GET_IFACE(PLUGINSYSTEM, m_pPluginSys);
     SM_GET_IFACE(TEXTPARSERS, m_pTextParsers);
     SM_GET_IFACE(GAMEHELPERS, m_pGameHelpers);
+
+    if (!m_pPluginSys || !m_pTextParsers) {
+        snprintf(error, maxlength, "Required interfaces (PluginSys/TextParsers) missing");
+        return false;
+    }
     
     g_pCVar->RegisterConCommand(&sm_mode);
     return true;

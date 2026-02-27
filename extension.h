@@ -30,6 +30,13 @@ public:
 private:
     // 卸载当前组的插件 
     void UnloadCurrentModePlugins();
+    
+    // 递归加载目录或单文件 
+    void LoadPluginsRecursively(const std::string& path);
+    
+    // 执行配置中的 Cvars 和 Commands 
+    void ExecuteCommandsAndCvars(const std::vector<std::pair<std::string, std::string>>& cvars, 
+                                 const std::vector<std::string>& commands);
 
 private:
     std::vector<IPlugin*> m_LoadedPlugins;
