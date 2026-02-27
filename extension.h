@@ -51,7 +51,7 @@ struct ModeGroup
 	std::map<std::string, std::string> commands;
 };
 
-class ModeGroupExtension : public SDKExtension
+class ModeGroupExtension : public SDKExtension, public IRootConsoleCommand
 {
 public:
 	virtual bool SDK_OnLoad(char *error, size_t maxlen, bool late);
@@ -69,6 +69,10 @@ public:
 	void UnloadPlugin(const char *path);
 	void ReloadConfig();
 	void ListModeGroups();
+	void CurrentModeGroup();
+
+public:
+	void OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args) override;
 
 private:
 	std::map<std::string, ModeGroup> m_ModeGroups;

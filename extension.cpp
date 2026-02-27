@@ -14,8 +14,8 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
  * details.
  *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License along
+ * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * As a special exception, AlliedModders LLC gives you permission to link the
  * code of this program (as well as its derivative works) to "Half-Life 2," the
@@ -36,12 +36,6 @@
 ModeGroupExtension g_ModeGroupExtension;
 
 SMEXT_LINK(&g_ModeGroupExtension);
-
-sp_nativeinfo_t g_Natives[];
-void Cmd_SwitchModeGroup(const CCommand &args);
-void Cmd_ReloadConfig(const CCommand &args);
-void Cmd_ListModeGroups(const CCommand &args);
-void Cmd_CurrentModeGroup(const CCommand &args);
 
 class ModeGroupConfigParser : public ITextListener_SMC
 {
@@ -163,15 +157,10 @@ bool ModeGroupExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 	m_pModeGroupChangedForward = forwards->CreateForward("OnModeGroupChanged", ET_Ignore, 2, NULL, Param_String, Param_String);
 
-	ConCmdBase *pCmd;
-	pCmd = new ConCommand("modegroup_switch", Cmd_SwitchModeGroup, "Switch to a mode group", FCVAR_NONE);
-	pCmd->AddCommand();
-	pCmd = new ConCommand("modegroup_reload", Cmd_ReloadConfig, "Reload mode group configuration", FCVAR_NONE);
-	pCmd->AddCommand();
-	pCmd = new ConCommand("modegroup_list", Cmd_ListModeGroups, "List available mode groups", FCVAR_NONE);
-	pCmd->AddCommand();
-	pCmd = new ConCommand("modegroup_current", Cmd_CurrentModeGroup, "Show current mode group", FCVAR_NONE);
-	pCmd->AddCommand();
+	rootconsole->AddRootConsoleCommand3("modegroup_switch", "Switch to a mode group", this);
+	rootconsole->AddRootConsoleCommand3("modegroup_reload", "Reload mode group configuration", this);
+	rootconsole->AddRootConsoleCommand3("modegroup_list", "List available mode groups", this);
+	rootconsole->AddRootConsoleCommand3("modegroup_current", "Show current mode group", this);
 
 	g_pSM->LogMessage(myself, "Mode Group Manager loaded successfully");
 
@@ -187,6 +176,11 @@ void ModeGroupExtension::SDK_OnUnload()
 		forwards->ReleaseForward(m_pModeGroupChangedForward);
 		m_pModeGroupChangedForward = NULL;
 	}
+
+	rootconsole->RemoveRootConsoleCommand("modegroup_switch", this);
+	rootconsole->RemoveRootConsoleCommand("modegroup_reload", this);
+	rootconsole->RemoveRootConsoleCommand("modegroup_list", this);
+	rootconsole->RemoveRootConsoleCommand("modegroup_current", this);
 
 	g_pSM->LogMessage(myself, "Mode Group Manager unloaded");
 }
@@ -337,7 +331,7 @@ void ModeGroupExtension::ScanDirectoryForPlugins(const char *path, std::vector<s
 			}
 		}
 
-		dir->NextFile();
+		dir->NextEntry();
 	}
 
 	libsys->CloseDirectory(dir);
@@ -348,19 +342,10 @@ bool ModeGroupExtension::LoadPlugin(const char *path)
 	char fullPath[PLATFORM_MAX_PATH];
 	g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", path);
 
-	IPlugin *pPlugin = pluginsys->FindPluginByFile(fullPath);
-	if (pPlugin)
-	{
-		if (pPlugin->GetStatus() == Plugin_Running)
-		{
-			g_pSM->LogMessage(myself, "Plugin already loaded: %s", path);
-			return true;
-		}
-	}
-
 	char error[256];
-	PluginId id;
-	if (!pluginsys->LoadPlugin(fullPath, NULL, error, sizeof(error), &id))
+	bool wasloaded;
+	IPlugin *pPlugin = plsys->LoadPlugin(fullPath, false, PluginType_MapUpdated, error, sizeof(error), &wasloaded);
+	if (!pPlugin)
 	{
 		g_pSM->LogError(myself, "Failed to load plugin %s: %s", path, error);
 		return false;
@@ -375,7 +360,20 @@ void ModeGroupExtension::UnloadPlugin(const char *path)
 	char fullPath[PLATFORM_MAX_PATH];
 	g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", path);
 
-	IPlugin *pPlugin = pluginsys->FindPluginByFile(fullPath);
+	IPlugin *pPlugin = NULL;
+	IPluginIterator *iter = plsys->GetPluginIterator();
+	while (iter->MorePlugins())
+	{
+		IPlugin *p = iter->GetPlugin();
+		if (strcmp(p->GetFilename(), fullPath) == 0)
+		{
+			pPlugin = p;
+			break;
+		}
+		iter->NextPlugin();
+	}
+	iter->Release();
+
 	if (!pPlugin)
 	{
 		return;
@@ -386,11 +384,9 @@ void ModeGroupExtension::UnloadPlugin(const char *path)
 		return;
 	}
 
-	PluginId id = pPlugin->GetId();
-	char error[256];
-	if (!pluginsys->UnloadPlugin(id, error, sizeof(error)))
+	if (!plsys->UnloadPlugin(pPlugin))
 	{
-		g_pSM->LogError(myself, "Failed to unload plugin %s: %s", path, error);
+		g_pSM->LogError(myself, "Failed to unload plugin %s", path);
 		return;
 	}
 
@@ -415,11 +411,49 @@ void ModeGroupExtension::ReloadConfig()
 
 void ModeGroupExtension::ListModeGroups()
 {
-	g_pSM->LogMessage(myself, "Available mode groups:");
+	rootconsole->ConsolePrint("Available mode groups:");
 	for (std::map<std::string, ModeGroup>::iterator it = m_ModeGroups.begin();
 		it != m_ModeGroups.end(); ++it)
 	{
-		g_pSM->LogMessage(myself, "  - %s", it->first.c_str());
+		rootconsole->ConsolePrint("  - %s", it->first.c_str());
+	}
+}
+
+void ModeGroupExtension::CurrentModeGroup()
+{
+	if (m_CurrentModeGroup.empty())
+	{
+		rootconsole->ConsolePrint("No mode group currently active");
+	}
+	else
+	{
+		rootconsole->ConsolePrint("Current mode group: %s", m_CurrentModeGroup.c_str());
+	}
+}
+
+void ModeGroupExtension::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
+{
+	if (strcmp(cmdname, "modegroup_switch") == 0)
+	{
+		if (args->ArgC() < 2)
+		{
+			rootconsole->ConsolePrint("Usage: modegroup_switch <groupname>");
+			return;
+		}
+
+		SwitchModeGroup(args->Arg(1));
+	}
+	else if (strcmp(cmdname, "modegroup_reload") == 0)
+	{
+		ReloadConfig();
+	}
+	else if (strcmp(cmdname, "modegroup_list") == 0)
+	{
+		ListModeGroups();
+	}
+	else if (strcmp(cmdname, "modegroup_current") == 0)
+	{
+		CurrentModeGroup();
 	}
 }
 
@@ -452,36 +486,3 @@ sp_nativeinfo_t g_Natives[] =
 	{"ModeGroup_ReloadConfig",		Native_ReloadConfig},
 	{NULL,							NULL}
 };
-
-void Cmd_SwitchModeGroup(const CCommand &args)
-{
-	if (args.ArgC() < 2)
-	{
-		Msg("Usage: modegroup_switch <groupname>\n");
-		return;
-	}
-
-	g_ModeGroupExtension.SwitchModeGroup(args.Arg(1));
-}
-
-void Cmd_ReloadConfig(const CCommand &args)
-{
-	g_ModeGroupExtension.ReloadConfig();
-}
-
-void Cmd_ListModeGroups(const CCommand &args)
-{
-	g_ModeGroupExtension.ListModeGroups();
-}
-
-void Cmd_CurrentModeGroup(const CCommand &args)
-{
-	if (g_ModeGroupExtension.m_CurrentModeGroup.empty())
-	{
-		Msg("No mode group currently active\n");
-	}
-	else
-	{
-		Msg("Current mode group: %s\n", g_ModeGroupExtension.m_CurrentModeGroup.c_str());
-	}
-}
