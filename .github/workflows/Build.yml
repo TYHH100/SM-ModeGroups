@@ -27,7 +27,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y clang g++-multilib lib32stdc++-7-dev lib32z1-dev libc6-dev-i386 linux-libc-dev:i386
+          sudo apt-get install -y clang g++-multilib
           echo "CC=clang" >> $GITHUB_ENV
           echo "CXX=clang++" >> $GITHUB_ENV
 
