@@ -6,7 +6,7 @@
 #include <IGameHelpers.h>
 #include <vector>
 #include <string>
-#include <icvar.h>
+#include <tier1/convar.h>
 
 #if defined _DEBUG
 #undef _DEBUG
@@ -41,6 +41,7 @@ private:
     ITextParsers *m_pTextParsers = nullptr;
     IGameHelpers *m_pGameHelpers = nullptr;
 };
+#endif
 
 extern ModeGroupExt g_ModeGroupExt;
 
