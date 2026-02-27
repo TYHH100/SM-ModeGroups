@@ -45,15 +45,16 @@ jobs:
 
       - name: Copy libudis86
         run: |
+          mkdir -p ${{ github.workspace }}/sourcemod-1.12/public/udis86
           cp -r ${{ github.workspace }}/libudis86 ${{ github.workspace }}/sourcemod-1.12/public/udis86/libudis86
           ls ${{ github.workspace }}/sourcemod-1.12/public/udis86/libudis86
 
-      - name: Checking out udis86
-        uses: actions/checkout@v6
-        with:
-          repository: vmt/udis86
-          ref: master
-          path: ${{ github.workspace }}/sourcemod-1.12/public/udis86
+      # - name: Checking out udis86
+      #   uses: actions/checkout@v6
+      #   with:
+      #     repository: vmt/udis86
+      #     ref: master
+      #     path: ${{ github.workspace }}/sourcemod-1.12/public/udis86
 
       - name: Checking out MM:Source
         uses: actions/checkout@v6
