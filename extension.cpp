@@ -1,347 +1,87 @@
 #include "extension.h"
+#include "filesystem.h"
 
-ModeGroupExtension g_ModeGroup;
-SMEXT_LINK(g_ModeGroup);
+ModeManager g_ModeManager;
+SMEXT_LINK(&g_ModeManager);
 
-ModeGroupExtension::ModeGroupExtension()
-    : m_IsSwitching(false), m_pModeCommand(nullptr)
-{
-}
+void ModeManager::SwitchMode(const char *modeName) {
 
-ModeGroupExtension::~ModeGroupExtension()
-{
-}
+    UnloadActivePlugins();
 
-bool ModeGroupExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
-{
-    sharesys->AddInterface(myself, this);
-    sharesys->RegisterLibrary(myself, "modegroup");
-
-    // Get SourceMod interface
-    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
-    if (!sm)
-    {
-        snprintf(error, maxlen, "Failed to get SourceMod interface");
-        return false;
-    }
-
-    // Get ICvar interface
-    ICvar *cvar = (ICvar *)sharesys->RequestInterface(ICvar_Name);
-    if (!cvar)
-    {
-        snprintf(error, maxlen, "Failed to get ICvar interface");
-        return false;
-    }
-
-    if (!LoadConfig())
-    {
-        snprintf(error, maxlen, "Failed to load config file");
-        return false;
-    }
-
-    IPlayerHelpers *playerhelpers = (IPlayerHelpers *)sharesys->RequestInterface(IPlayerHelpers_Name);
-    if (playerhelpers)
-    {
-        playerhelpers->GetPluginManager()->AddPluginsListener(this);
-    }
-
-    m_pModeCommand = new ConCommand("sm_mode", OnModeCommand, "Switch game mode (see modegroup.cfg)", FCVAR_SPONLY | FCVAR_GAMEDLL);
-    cvar->RegisterConCommand(m_pModeCommand);
-
-    return true;
-}
-
-void ModeGroupExtension::SDK_OnAllLoaded()
-{
-}
-
-void ModeGroupExtension::SDK_OnUnload()
-{
-    UnloadCurrentModePlugins();
-
-    IPlayerHelpers *playerhelpers = (IPlayerHelpers *)sharesys->RequestInterface(IPlayerHelpers_Name);
-    if (playerhelpers)
-    {
-        playerhelpers->GetPluginManager()->RemovePluginsListener(this);
-    }
-
-    if (m_pModeCommand)
-    {
-        // Get ICvar interface
-        ICvar *cvar = (ICvar *)sharesys->RequestInterface(ICvar_Name);
-        if (cvar)
-        {
-            cvar->UnregisterConCommand(m_pModeCommand);
-        }
-        delete m_pModeCommand;
-        m_pModeCommand = nullptr;
-    }
-}
-
-void ModeGroupExtension::SDK_OnPauseChange(bool paused)
-{
-}
-
-void ModeGroupExtension::OnPluginLoaded(IPlugin *plugin)
-{
-    if (m_IsSwitching)
-    {
-        m_LoadedPlugins.push_back(plugin);
-    }
-}
-
-void ModeGroupExtension::OnPluginUnloaded(IPlugin *plugin)
-{
-    for (auto it = m_LoadedPlugins.begin(); it != m_LoadedPlugins.end(); ++it)
-    {
-        if (*it == plugin)
-        {
-            m_LoadedPlugins.erase(it);
-            break;
-        }
-    }
-}
-
-bool ModeGroupExtension::LoadConfig()
-{
-    // Get SourceMod interface
-    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
-    if (!sm)
-        return false;
-
+    KeyValues *pKV = new KeyValues("modegroups");
     char path[PLATFORM_MAX_PATH];
-    sm->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
+    g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
 
-    KeyValues *kv = new KeyValues("ModeGroups");
-    if (!kv->LoadFromFile(sm->GetFileSystem(), path))
-    {
-        kv->deleteThis();
-        return false;
-    }
-
-    if (!kv->JumpToKey("ModeGroups"))
-    {
-        kv->deleteThis();
-        return false;
-    }
-
-    for (KeyValues *sub = kv->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-    {
-        ModeInfo info;
-        info.name = sub->GetName();
-
-        // plugin_directory
-        const char *pluginDir = sub->GetString("plugin_directory", nullptr);
-        if (pluginDir && pluginDir[0])
-        {
-            CollectPluginsFromDir(pluginDir, info.pluginFiles, true);
-        }
-
-        // plugins list
-        if (sub->JumpToKey("plugins"))
-        {
-            for (KeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
-            {
-                const char *fileName = p->GetString();
-                if (fileName && fileName[0])
-                {
-                    info.pluginFiles.push_back(fileName);
-                }
-            }
-            sub->GoBack();
-        }
-
-        // cvars
-        if (sub->JumpToKey("cvars"))
-        {
-            for (KeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
-            {
-                info.cvars[p->GetName()] = p->GetString();
-            }
-            sub->GoBack();
-        }
-
-        // commands
-        if (sub->JumpToKey("commands"))
-        {
-            for (KeyValues *p = sub->GetFirstSubKey(); p; p = p->GetNextKey())
-            {
-                const char *cmd = p->GetString();
-                if (cmd && cmd[0])
-                {
-                    info.commands.push_back(cmd);
-                }
-            }
-            sub->GoBack();
-        }
-
-        m_Modes.push_back(info);
-    }
-
-    kv->deleteThis();
-    return true;
-}
-
-void ModeGroupExtension::CollectPluginsFromDir(const char *relativeDir, std::vector<std::string> &outFiles, bool recursive)
-{
-    // Get SourceMod interface
-    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
-    if (!sm)
+    if (!pKV->LoadFromFile(filesystem, path, "GAME")) {
+        delete pKV;
         return;
-
-    char fullPath[PLATFORM_MAX_PATH];
-    sm->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
-
-    ILibrarySys *libsys = (ILibrarySys *)sharesys->RequestInterface(ILibrarySys_Name);
-    if (!libsys)
-        return;
-
-    IDirectory *dir = libsys->OpenDirectory(fullPath);
-    if (!dir)
-        return;
-
-    while (dir->MoreFiles())
-    {
-        if (dir->IsEntryDirectory())
-        {
-            if (recursive && strcmp(dir->GetEntryName(), ".") != 0 && strcmp(dir->GetEntryName(), "..") != 0)
-            {
-                char subDir[PLATFORM_MAX_PATH];
-                sm->Format(subDir, sizeof(subDir), "%s/%s", relativeDir, dir->GetEntryName());
-                CollectPluginsFromDir(subDir, outFiles, recursive);
-            }
-        }
-        else
-        {
-            const char *name = dir->GetEntryName();
-            if (strstr(name, ".smx") || strstr(name, ".SMX"))
-            {
-                char relativePath[PLATFORM_MAX_PATH];
-                sm->Format(relativePath, sizeof(relativePath), "%s/%s", relativeDir, name);
-                outFiles.push_back(relativePath);
-            }
-        }
-        dir->NextEntry();
     }
-    dir->Release();
-}
 
-void ModeGroupExtension::UnloadCurrentModePlugins()
-{
-    IPlayerHelpers *playerhelpers = (IPlayerHelpers *)sharesys->RequestInterface(IPlayerHelpers_Name);
-    if (playerhelpers)
-    {
-        IPluginManager *mgr = playerhelpers->GetPluginManager();
-        for (IPlugin *pl : m_LoadedPlugins)
-        {
-            mgr->UnloadPlugin(pl);
-        }
-    }
-    m_LoadedPlugins.clear();
-}
 
-void ModeGroupExtension::LoadModePlugins(const std::vector<std::string> &files)
-{
-    IPlayerHelpers *playerhelpers = (IPlayerHelpers *)sharesys->RequestInterface(IPlayerHelpers_Name);
-    if (playerhelpers)
-    {
-        IPluginManager *mgr = playerhelpers->GetPluginManager();
-        for (const std::string &file : files)
-        {
-            char error[255];
-            bool wasLoaded = false;
+    KeyValues *pMode = pKV->FindKey(modeName);
+    if (pMode) {
 
-            IPlugin *pl = mgr->LoadPlugin(file.c_str(), false, SourceMod::PluginType_Private, error, sizeof(error), &wasLoaded);
-            if (!pl)
-            {
-                // Get SourceMod interface for logging
-                ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
-                if (sm)
-                {
-                    sm->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
+        KeyValues *pSettings = pMode->FindKey("cvars&cmds");
+        if (pSettings) {
+            for (KeyValues *pCur = pSettings->GetFirstValue(); pCur; pCur = pCur->GetNextKey()) {
+                ConVar *pConVar = icvar->FindVar(pCur->GetName());
+                if (pConVar) {
+                    pConVar->SetValue(pCur->GetString());
                 }
             }
         }
-    }
-}
 
-void ModeGroupExtension::ApplyModeSettings(const ModeInfo &mode)
-{
-    // Get SourceMod interface
-    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
-    if (!sm)
-        return;
-
-    // Get ICvar interface
-    ICvar *cvar = (ICvar *)sharesys->RequestInterface(ICvar_Name);
-
-    for (const auto &it : mode.cvars)
-    {
-        if (cvar)
-        {
-            ConVar *convar = cvar->FindVar(it.first.c_str());
-            if (convar)
-            {
-                convar->SetValue(it.second.c_str());
-            }
-            else
-            {
-                sm->LogError(myself, "Cvar %s not found", it.first.c_str());
-            }
+        const char *dir = pMode->GetString("plugin_directory", "");
+        if (dir[0] != '\0') {
+            LoadPluginsRecursive("addons/sourcemod/plugins", dir);
         }
     }
 
-    for (const std::string &cmd : mode.commands)
-    {
-        sm->InsertServerCommand(cmd.c_str());
-    }
+    delete pKV;
 }
 
-bool ModeGroupExtension::SwitchToMode(const char *modeName)
-{
-    const ModeInfo *newMode = nullptr;
-    for (const auto &mode : m_Modes)
-    {
-        if (mode.name == modeName)
-        {
-            newMode = &mode;
-            break;
+void ModeManager::LoadPluginsRecursive(const char *basePath, const char *relPath) {
+    char searchPath[PLATFORM_MAX_PATH];
+    char currentFullDir[PLATFORM_MAX_PATH];
+    
+    g_LibSys->PathFormat(currentFullDir, sizeof(currentFullDir), "%s/%s", basePath, relPath);
+    g_LibSys->PathFormat(searchPath, sizeof(searchPath), "%s/*", currentFullDir);
+
+    FileFindHandle_t hFind;
+    const char *fileName = filesystem->FindFirst(searchPath, &hFind);
+
+    while (fileName) {
+        if (strcmp(fileName, ".") != 0 && strcmp(fileName, "..") != 0) {
+            char nextRelPath[PLATFORM_MAX_PATH];
+            g_LibSys->PathFormat(nextRelPath, sizeof(nextRelPath), "%s/%s", relPath, fileName);
+
+            if (filesystem->FindIsDirectory(hFind)) {
+
+                LoadPluginsRecursive(basePath, nextRelPath);
+            } else {
+
+                size_t len = strlen(fileName);
+                if (len > 4 && strcmp(fileName + len - 4, ".smx") == 0) {
+                    char error[256];
+                    bool already;
+
+                    IPlugin *pPlugin = plugins->LoadPlugin(nextRelPath, false, PluginType_MapUpdated, error, sizeof(error), &already);
+                    if (pPlugin) {
+                        m_ActivePlugins.push_back(pPlugin);
+                    }
+                }
+            }
+        }
+        fileName = filesystem->FindNext(hFind);
+    }
+    filesystem->FindClose(hFind);
+}
+
+void ModeManager::UnloadActivePlugins() {
+    for (auto it = m_ActivePlugins.begin(); it != m_ActivePlugins.end(); ++it) {
+        if (*it && (*it)->GetStatus() <= PluginStatus_Paused) {
+            plugins->UnloadPlugin(*it);
         }
     }
-    if (!newMode)
-        return false;
-
-    UnloadCurrentModePlugins();
-
-    m_IsSwitching = true;
-    LoadModePlugins(newMode->pluginFiles);
-    ApplyModeSettings(*newMode);
-    m_IsSwitching = false;
-
-    m_CurrentMode = modeName;
-    return true;
-}
-
-void ModeGroupExtension::OnModeCommand(const CCommand &command)
-{
-    // Get SourceMod interface
-    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
-    if (!sm)
-        return;
-
-    if (command.ArgC() < 2)
-    {
-        sm->LogMessage(myself, "Usage: sm_mode <modename>");
-        return;
-    }
-
-    const char *modeName = command.Arg(1);
-    if (g_ModeGroup.SwitchToMode(modeName))
-    {
-        sm->LogMessage(myself, "Switched to mode '%s'", modeName);
-    }
-    else
-    {
-        sm->LogMessage(myself, "Unknown mode '%s'", modeName);
-    }
+    m_ActivePlugins.clear();
 }
