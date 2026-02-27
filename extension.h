@@ -10,7 +10,6 @@ class ModeGroupExt : public SDKExtension
 public:
     virtual bool SDK_OnLoad(char *error, size_t maxlength, bool late);
     virtual void SDK_OnUnload();
-    virtual bool SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlength, bool late);
 
 public:
     // 切换模式的核心函数
@@ -30,7 +29,9 @@ private:
 private:
     std::vector<IPlugin*> m_LoadedPlugins;
     std::string m_CurrentMode = "none";
-    IVEngineServer *engine = nullptr;
+    IPluginSys *m_pPluginSys = nullptr;
+    ITextParsers *m_pTextParsers = nullptr;
+    IVEngineServer *m_pEngine = nullptr;
 };
 
 extern ModeGroupExt g_ModeGroupExt;

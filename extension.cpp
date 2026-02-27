@@ -65,12 +65,16 @@ void Command_SwitchMode(const CCommand &command) {
 
 ConCommand sm_mode("sm_mode", Command_SwitchMode, "Switch mode group", FCVAR_NONE);
 
-bool ModeGroupExt::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlength, bool late) {
-    engine = (IVEngineServer *)ismm->GetInterface(INTERFACEVERSION_VENGINESERVER);
-    return true;
-}
-
 bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
+    SM_GET_IFACE(PLUGINSYS, m_pPluginSys);
+    SM_GET_IFACE(TEXTPARSERS, m_pTextParsers);
+    
+    // Get engine interface through gamehelpers
+    IGameHelpers *gamehelpers = nullptr;
+    if (g_pShareSys->RequestInterface(SMINTERFACE_GAMEHELPERS_NAME, SMINTERFACE_GAMEHELPERS_VERSION, (SMInterface **)&gamehelpers)) {
+        m_pEngine = gamehelpers->GetEngineServer();
+    }
+    
     g_pCVar->RegisterConCommand(&sm_mode);
     return true;
 }
@@ -85,7 +89,7 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     g_pSM->BuildPath(Path_SM, configPath, sizeof(configPath), "configs/modegroup.cfg");
 
     ModeParser parser(modeName);
-    SMCError err = textparsers->ParseSMCFile(configPath, &parser, nullptr, nullptr, 0);
+    SMCError err = m_pTextParsers->ParseSMCFile(configPath, &parser, nullptr, nullptr, 0);
 
     if (err != SMCError_Okay || !parser.found) {
         g_pSM->LogError(myself, "Failed to load mode '%s'", modeName);
@@ -103,7 +107,7 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
                 if (entry.is_regular_file() && entry.path().extension() == ".smx") {
                     char loadErr[256];
                     bool wasloaded = false;
-                    IPlugin* p = g_pSM->GetPluginSys()->LoadPlugin(entry.path().string().c_str(), false, nullptr, loadErr, sizeof(loadErr), &wasloaded);
+                    IPlugin* p = m_pPluginSys->LoadPlugin(entry.path().string().c_str(), false, nullptr, loadErr, sizeof(loadErr), &wasloaded);
                     if (p && !wasloaded) m_LoadedPlugins.push_back(p);
                 }
             }
@@ -116,16 +120,20 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     }
 
     for (const auto& cmd : parser.commands) {
-        engine->ServerCommand(cmd.c_str());
+        if (m_pEngine) {
+            m_pEngine->ServerCommand(cmd.c_str());
+        }
     }
-    engine->ServerExecute();
+    if (m_pEngine) {
+        m_pEngine->ServerExecute();
+    }
 
     return true;
 }
 
 void ModeGroupExt::UnloadCurrentModePlugins() {
     for (IPlugin* p : m_LoadedPlugins) {
-        if (p && p->GetStatus() <= Plugin_Paused) g_pSM->GetPluginSys()->UnloadPlugin(p);
+        if (p && p->GetStatus() <= Plugin_Paused) m_pPluginSys->UnloadPlugin(p);
     }
     m_LoadedPlugins.clear();
 }
