@@ -48,7 +48,7 @@ jobs:
       #     cp -r ${{ github.workspace }}/libudis86 ${{ github.workspace }}/sourcemod-1.12/public/asm/libudis86
       #     ls ${{ github.workspace }}/sourcemod-1.12/public/asm/libudis86
 
-      - name: Checking out SourceMod
+      - name: Checking out udis86
         uses: actions/checkout@v6
         with:
           repository: vmt/udis86

@@ -8,12 +8,12 @@ projectName = 'modegroup'
 sourceFiles = [
   'extension.cpp',
   os.path.join(Extension.sm_root, 'public', 'asm', 'asm.c'),
-  os.path.join(Extension.sm_root, 'public', 'asm', 'libudis86', 'decode.c'),
-  os.path.join(Extension.sm_root, 'public', 'asm', 'libudis86', 'itab.c'),
-  os.path.join(Extension.sm_root, 'public', 'asm', 'libudis86', 'syn-att.c'),
-  os.path.join(Extension.sm_root, 'public', 'asm', 'libudis86', 'syn-intel.c'),
-  os.path.join(Extension.sm_root, 'public', 'asm', 'libudis86', 'syn.c'),
-  os.path.join(Extension.sm_root, 'public', 'asm', 'libudis86', 'udis86.c'),
+  os.path.join(Extension.sm_root, 'public', 'udis86', 'libudis86', 'decode.c'),
+  os.path.join(Extension.sm_root, 'public', 'udis86', 'libudis86', 'itab.c'),
+  os.path.join(Extension.sm_root, 'public', 'udis86', 'libudis86', 'syn-att.c'),
+  os.path.join(Extension.sm_root, 'public', 'udis86', 'libudis86', 'syn-intel.c'),
+  os.path.join(Extension.sm_root, 'public', 'udis86', 'libudis86', 'syn.c'),
+  os.path.join(Extension.sm_root, 'public', 'udis86', 'libudis86', 'udis86.c'),
 ]
 
 project = builder.LibraryProject(projectName)
