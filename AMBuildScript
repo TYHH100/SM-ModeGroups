@@ -212,6 +212,7 @@ class ExtensionConfig(object):
     cxx.cxxflags += [
       '-fno-threadsafe-statics',
       '-Wno-non-virtual-dtor',
+      '-Wno-overloaded-virtual',
       '-Wno-register',
       '-fvisibility-inlines-hidden',
       '-std=c++17',
