@@ -16,9 +16,6 @@ namespace fs = std::filesystem;
 ModeGroupExt g_ModeGroupExt;
 SMEXT_LINK(&g_ModeGroupExt);
 
-// 定义全局引擎指针
-IVEngineServer *engine = nullptr;
-
 // --- SMC 解析监听器 ---
 class ModeParser : public ITextListener_SMC {
 public:
@@ -28,6 +25,7 @@ public:
     std::vector<std::string> commands;
     int state = 0; 
     bool found = false;
+    std::string currentSection;
 
     ModeParser(const char* mode) : targetMode(mode) {}
 
@@ -35,15 +33,18 @@ public:
     SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name) override {
         if (state == 0 && strcmp(name, "ModeGroups") == 0) state = 1;
         else if (state == 1 && strcmp(name, targetMode.c_str()) == 0) { state = 2; found = true; }
-        else if (state == 2 && (strcmp(name, "cvars") == 0 || strcmp(name, "commands") == 0)) state = 3;
+        else if (state == 2 && (strcmp(name, "cvars") == 0 || strcmp(name, "commands") == 0)) { 
+            state = 3;
+            currentSection = name;
+        }
         return SMCResult_Continue;
     }
 
     SMCResult ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value) override {
         if (state == 2 && strcmp(key, "plugin_directory") == 0) pluginDir = value;
         else if (state == 3) {
-            if (strcmp(states->section, "cvars") == 0) cvars.push_back({key, value});
-            else if (strcmp(states->section, "commands") == 0) commands.push_back(key);
+            if (currentSection == "cvars") cvars.push_back({key, value});
+            else if (currentSection == "commands") commands.push_back(key);
         }
         return SMCResult_Continue;
     }
@@ -65,7 +66,6 @@ void Command_SwitchMode(const CCommand &command) {
 ConCommand sm_mode("sm_mode", Command_SwitchMode, "Switch mode group", FCVAR_NONE);
 
 bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
-    engine = g_pSM->GetIServer()->GetEngine();
     g_pCVar->RegisterConCommand(&sm_mode);
     return true;
 }
@@ -80,7 +80,7 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     g_pSM->BuildPath(Path_SM, configPath, sizeof(configPath), "configs/modegroup.cfg");
 
     ModeParser parser(modeName);
-    SMCError err = g_pSM->ParseSMCFile(configPath, &parser, nullptr);
+    SMCError err = textparsers->ParseSMCFile(configPath, &parser, nullptr);
 
     if (err != SMCError_Okay || !parser.found) {
         g_pSM->LogError(myself, "Failed to load mode '%s'", modeName);
@@ -98,7 +98,7 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
                 if (entry.is_regular_file() && entry.path().extension() == ".smx") {
                     char loadErr[256];
                     bool wasloaded = false;
-                    IPlugin* p = g_pPluginSys->LoadPlugin(entry.path().string().c_str(), false, nullptr, loadErr, sizeof(loadErr), &wasloaded);
+                    IPlugin* p = pluginsys->LoadPlugin(entry.path().string().c_str(), false, nullptr, loadErr, sizeof(loadErr), &wasloaded);
                     if (p && !wasloaded) m_LoadedPlugins.push_back(p);
                 }
             }
@@ -111,16 +111,15 @@ bool ModeGroupExt::SwitchMode(const char* modeName) {
     }
 
     for (const auto& cmd : parser.commands) {
-        g_pEngine->ServerCommand(cmd.c_str());
+        g_pSM->ExecuteServerCommand(cmd.c_str());
     }
-    g_pEngine->ServerExecute();
 
     return true;
 }
 
 void ModeGroupExt::UnloadCurrentModePlugins() {
     for (IPlugin* p : m_LoadedPlugins) {
-        if (p && p->GetStatus() <= Plugin_Paused) g_pPluginSys->UnloadPlugin(p);
+        if (p && p->GetStatus() <= Plugin_Paused) pluginsys->UnloadPlugin(p);
     }
     m_LoadedPlugins.clear();
 }
