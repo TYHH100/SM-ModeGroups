@@ -6,19 +6,12 @@
 #include <IGameHelpers.h>
 #include <vector>
 #include <string>
-
-#if defined CVAR_INTERFACE_VERSION
-#undef CVAR_INTERFACE_VERSION
-#endif
 #include <icvar.h>
 
 #if defined _DEBUG
 #undef _DEBUG
 #endif
 #include <tier1/convar.h>
-
-// Declare global Source SDK interfaces
-extern ICvar *g_pCVar;
 
 class ModeGroupExt : public SDKExtension
 {

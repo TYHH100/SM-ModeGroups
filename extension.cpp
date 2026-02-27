@@ -2,10 +2,6 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-
-#if defined CVAR_INTERFACE_VERSION
-#undef CVAR_INTERFACE_VERSION
-#endif
 #include <icvar.h>
 
 namespace fs = std::filesystem;
@@ -63,29 +59,24 @@ void Command_SwitchMode(const CCommand &command) {
 ConCommand sm_mode("sm_mode", Command_SwitchMode, "Switch mode group", FCVAR_NONE);
 
 bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
+    // Verify ICvar is available before registering commands
+    if (!g_pCVar) {
+        snprintf(error, maxlength, "Global ICvar interface not found");
+        return false;
+    }
+
     SM_GET_IFACE(PLUGINSYSTEM, m_pPluginSys);
     SM_GET_IFACE(TEXTPARSERS, m_pTextParsers);
     SM_GET_IFACE(GAMEHELPERS, m_pGameHelpers);
-
-    if (!m_pPluginSys || !m_pTextParsers) {
-        snprintf(error, maxlength, "Required interfaces (PluginSys/TextParsers) missing");
-        return false;
-    }
     
-    if (!g_pCVar) {
-        snprintf(error, maxlength, "Could not find ICvar interface");
-        return false;
-    }
-    
+    // Register command only after interface check
     g_pCVar->RegisterConCommand(&sm_mode);
     return true;
 }
 
 void ModeGroupExt::SDK_OnUnload() {
     UnloadCurrentModePlugins();
-    if (g_pCVar) {
-        g_pCVar->UnregisterConCommand(&sm_mode);
-    }
+    g_pCVar->UnregisterConCommand(&sm_mode);
 }
 
 bool ModeGroupExt::SwitchMode(const char* modeName) {
