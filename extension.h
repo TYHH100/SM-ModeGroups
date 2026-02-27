@@ -6,8 +6,6 @@
 #include <IGameHelpers.h>
 #include <vector>
 #include <string>
-
-// Include convar.h for ConCommand/ConVar types, but NOT icvar.h
 #include <tier1/convar.h>
 
 class ModeGroupExt : public SDKExtension
@@ -15,11 +13,15 @@ class ModeGroupExt : public SDKExtension
 public:
     virtual bool SDK_OnLoad(char *error, size_t maxlength, bool late) override;
     virtual void SDK_OnUnload() override;
+
+public:
     bool SwitchMode(const char* modeName);
 
 private:
     void UnloadCurrentModePlugins();
-    
+    void ScanAndLoadPlugins(const std::string& path);
+
+private:
     std::vector<IPlugin*> m_LoadedPlugins;
     IPluginManager *m_pPluginSys = nullptr;
     ITextParsers *m_pTextParsers = nullptr;
