@@ -37,22 +37,22 @@ jobs:
         with:
           repository: alliedmodders/sourcemod
           ref: 1.12-dev
-          path: sourcemod-1.12
+          path: sourcemod
           submodules: recursive
 
-      - name: Checking out MM:Source
-        uses: actions/checkout@v6
-        with:
-          repository: alliedmodders/metamod-source
-          ref: 1.12-dev
-          path: metamod-1.12
-          submodules: recursive
+      # - name: Checking out MM:Source
+      #   uses: actions/checkout@v6
+      #   with:
+      #     repository: alliedmodders/metamod-source
+      #     ref: 1.12-dev
+      #     path: metamod-1.12
+      #     submodules: recursive
 
-      - name: Checking out AMBuild
-        uses: actions/checkout@v6
-        with:
-          repository: alliedmodders/ambuild
-          path: ambuild 
+      # - name: Checking out AMBuild
+      #   uses: actions/checkout@v6
+      #   with:
+      #     repository: alliedmodders/ambuild
+      #     path: ambuild 
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -87,7 +87,7 @@ jobs:
       #     path: hl2sdk-sdk2013
 
       - name: Checkout SourceMod dependencies
-        working-directory: sourcemod-1.12
+        working-directory: sourcemod
         run: bash tools/checkout-deps.sh
 
       - name: Configure and Build
