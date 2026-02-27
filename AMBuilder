@@ -14,7 +14,6 @@ sourceFiles = [
   os.path.join(Extension.sm_root, 'public', 'libudis86', 'syn-intel.c'),
   os.path.join(Extension.sm_root, 'public', 'libudis86', 'syn.c'),
   os.path.join(Extension.sm_root, 'public', 'libudis86', 'udis86.c'),
-  os.path.join(Extension.sm_root, 'public', 'libudis86'),
 ]
 
 project = builder.LibraryProject(projectName)

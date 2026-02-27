@@ -1,5 +1,5 @@
 #include "asm.h"
-#include "libudis86/udis86.h"
+#include "public/libudis86/udis86.h"
 
 #ifndef WIN32
 #define _GNU_SOURCE
@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "libudis86/udis86.h"
+#include "public/libudis86/udis86.h"
 
 #define REG_EAX			0
 #define REG_ECX			1
