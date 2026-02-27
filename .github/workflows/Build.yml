@@ -104,7 +104,7 @@ jobs:
       - name: Configure and Build
         run: |
           mkdir -p build && cd build
-          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/sourcemod-1.12" --mms-path="${{ github.workspace }}/metamod-1.12" --hl2sdk-manifest-path="${{ github.workspace }}/hl2sdk-manifests" --sdks="tf2" --targets="x86,x86_64"
+          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/sourcemod-1.12" --mms-path="${{ github.workspace }}/metamod-1.12" --hl2sdk-manifest-path="${{ github.workspace }}/hl2sdk-manifests" --sdks="tf2" --targets="x86"
           ambuild
 
       - name: Upload extension package
