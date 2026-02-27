@@ -66,13 +66,13 @@ void Command_SwitchMode(const CCommand &command) {
 ConCommand sm_mode("sm_mode", Command_SwitchMode, "Switch mode group", FCVAR_NONE);
 
 bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
-    SM_GET_IFACE(PLUGINSYS, m_pPluginSys);
+    SM_GET_IFACE(PLUGINSYSTEM, m_pPluginSys);
     SM_GET_IFACE(TEXTPARSERS, m_pTextParsers);
     
-    // Get engine interface through gamehelpers
     IGameHelpers *gamehelpers = nullptr;
-    if (g_pShareSys->RequestInterface(SMINTERFACE_GAMEHELPERS_NAME, SMINTERFACE_GAMEHELPERS_VERSION, (SMInterface **)&gamehelpers)) {
-        m_pEngine = gamehelpers->GetEngineServer();
+    SM_GET_LATE_IFACE(GAMEHELPERS, gamehelpers);
+    if (gamehelpers) {
+        m_pEngine = gamehelpers->GetEngine();
     }
     
     g_pCVar->RegisterConCommand(&sm_mode);

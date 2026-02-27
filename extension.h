@@ -2,8 +2,15 @@
 #define _INCLUDE_MODEGROUP_EXTENSION_H_
 
 #include "smsdk_ext.h"
+#include <IPluginSys.h>
+#include <IGameHelpers.h>
 #include <vector>
 #include <string>
+
+#if defined CVAR_INTERFACE_VERSION
+#undef CVAR_INTERFACE_VERSION
+#endif
+#include <eiface.h>
 
 class ModeGroupExt : public SDKExtension
 {
