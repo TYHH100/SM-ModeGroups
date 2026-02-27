@@ -69,6 +69,7 @@ public:
 	void UnloadPlugin(const char *path);
 	void ReloadConfig();
 	void ListModeGroups();
+	const char *GetCurrentModeGroupName();
 	void CurrentModeGroup();
 
 public:

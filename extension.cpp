@@ -37,6 +37,8 @@ ModeGroupExtension g_ModeGroupExtension;
 
 SMEXT_LINK(&g_ModeGroupExtension);
 
+extern sp_nativeinfo_t g_Natives[];
+
 class ModeGroupConfigParser : public ITextListener_SMC
 {
 public:
@@ -275,7 +277,7 @@ void ModeGroupExtension::LoadModeGroup(const ModeGroup &group)
 	for (std::map<std::string, std::string>::const_iterator it = group.cvars.begin();
 		it != group.cvars.end(); ++it)
 	{
-		ConVar *pCvar = icvar->FindVar(it->first.c_str());
+		ConVar *pCvar = cvar->FindVar(it->first.c_str());
 		if (pCvar)
 		{
 			pCvar->SetValue(it->second.c_str());
@@ -431,6 +433,11 @@ void ModeGroupExtension::CurrentModeGroup()
 	}
 }
 
+const char *ModeGroupExtension::GetCurrentModeGroupName()
+{
+	return m_CurrentModeGroup.c_str();
+}
+
 void ModeGroupExtension::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
 {
 	if (strcmp(cmdname, "modegroup_switch") == 0)
@@ -469,7 +476,7 @@ cell_t Native_GetCurrentModeGroup(IPluginContext *pContext, const cell_t *params
 {
 	char *buffer;
 	pContext->LocalToString(params[1], &buffer);
-	ke::SafeStrcpy(buffer, params[2], g_ModeGroupExtension.m_CurrentModeGroup.c_str());
+	ke::SafeStrcpy(buffer, params[2], g_ModeGroupExtension.GetCurrentModeGroupName());
 	return 1;
 }
 
