@@ -1,51 +1,82 @@
-#ifndef _INCLUDE_MODEGROUP_EXTENSION_H_
-#define _INCLUDE_MODEGROUP_EXTENSION_H_
+/**
+ * vim: set ts=4 :
+ * =============================================================================
+ * SourceMod Mode Groups Extension
+ * Copyright (C) 2024.  All rights reserved.
+ * =============================================================================
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, version 3.0, as published by the
+ * Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, AlliedModders LLC gives you permission to link the
+ * code of this program (as well as its derivative works) to "Half-Life 2," the
+ * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+ * by the Valve Corporation.  You must obey the GNU General Public License in
+ * all respects for all other code used.  Additionally, AlliedModders LLC grants
+ * this exception to all derivative works.  AlliedModders LLC defines further
+ * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+ * or <http://www.sourcemod.net/license.php>.
+ *
+ * Version: $Id$
+ */
+
+#ifndef _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
+#define _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
+
+/**
+ * @file extension.h
+ * @brief Mode Groups extension code header.
+ */
 
 #include "smsdk_ext.h"
-#include <IPluginSys.h>
-#include <IGameHelpers.h>
 #include <vector>
 #include <string>
-
-#if defined CVAR_INTERFACE_VERSION
-#undef CVAR_INTERFACE_VERSION
-#endif
-
-#include <tier1/convar.h>
+#include <map>
 
 struct ModeGroup
 {
-    std::vector<std::string> pluginsToLoad;
-    std::vector<std::string> pluginsToUnload;
-    std::vector<std::pair<std::string, std::string>> cvars;
-    std::vector<std::pair<std::string, std::string>> commands;
+	std::string name;
+	std::string plugin_directory;
+	std::vector<std::string> plugin_files;
+	std::map<std::string, std::string> cvars;
+	std::map<std::string, std::string> commands;
 };
 
-class ModeGroupExt : public SDKExtension
+class ModeGroupExtension : public SDKExtension
 {
 public:
-    virtual bool SDK_OnLoad(char *error, size_t maxlength, bool late) override;
-    virtual void SDK_OnUnload() override;
+	virtual bool SDK_OnLoad(char *error, size_t maxlen, bool late);
+	virtual void SDK_OnUnload();
+	virtual void SDK_OnAllLoaded();
+	virtual bool QueryRunning(char *error, size_t maxlen);
 
 public:
-    bool SwitchMode(const char* modeName);
-    void ReloadConfig();
+	bool LoadConfig(char *error, size_t maxlen);
+	bool SwitchModeGroup(const char *groupName);
+	void UnloadCurrentModeGroup();
+	void LoadModeGroup(const ModeGroup &group);
+	void ScanDirectoryForPlugins(const char *path, std::vector<std::string> &plugins);
+	bool LoadPlugin(const char *path);
+	void UnloadPlugin(const char *path);
+	void ReloadConfig();
+	void ListModeGroups();
 
 private:
-    void UnloadCurrentModePlugins();
-    void ScanAndLoadPlugins(const std::string& path);
-    bool LoadConfig();
-    void ScanPluginsRecursive(const std::string& path, std::vector<std::string>& files);
-
-private:
-    std::vector<IPlugin*> m_CurrentModePlugins;
-    std::map<std::string, ModeGroup> m_Modes;
-    IPluginManager *m_pPluginSys = nullptr;
-    ITextParsers *m_pTextParsers = nullptr;
-    IGameHelpers *m_pGameHelpers = nullptr;
-    ICvar *m_pCVar = nullptr;
+	std::map<std::string, ModeGroup> m_ModeGroups;
+	std::string m_CurrentModeGroup;
+	std::vector<std::string> m_LoadedPlugins;
+	IForward *m_pModeGroupChangedForward;
 };
 
-extern ModeGroupExt g_ModeGroupExt;
+extern ModeGroupExtension g_ModeGroupExtension;
 
-#endif // _INCLUDE_MODEGROUP_EXTENSION_H_
+#endif // _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_

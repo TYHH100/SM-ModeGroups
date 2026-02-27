@@ -1,231 +1,487 @@
+/**
+ * vim: set ts=4 :
+ * =============================================================================
+ * SourceMod Mode Groups Extension
+ * Copyright (C) 2024.  All rights reserved.
+ * =============================================================================
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, version 3.0, as published by the
+ * Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, AlliedModders LLC gives you permission to link the
+ * code of this program (as well as its derivative works) to "Half-Life 2," the
+ * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+ * by the Valve Corporation.  You must obey the GNU General Public License in
+ * all respects for all other code used.  Additionally, AlliedModders LLC grants
+ * this exception to all derivative works.  AlliedModders LLC defines further
+ * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+ * or <http://www.sourcemod.net/license.php>.
+ *
+ * Version: $Id$
+ */
+
 #include "extension.h"
-#include <filesystem>
-#include <algorithm>
-#include <map>
+#include <sh_string.h>
+#include <ITextParsers.h>
 
-namespace fs = std::filesystem;
+ModeGroupExtension g_ModeGroupExtension;
 
-ModeGroupExt g_ModeGroupExt;
-SMEXT_LINK(&g_ModeGroupExt);
+SMEXT_LINK(&g_ModeGroupExtension);
 
-// --- 指令回调 ---
-void Command_SwitchMode(const CCommand &command) {
-    if (command.ArgC() < 2) {
-        g_pSM->LogMessage(myself, "用法: sm_mode <模式名称>");
-        return;
-    }
-    g_ModeGroupExt.SwitchMode(command.Arg(1));
+sp_nativeinfo_t g_Natives[];
+void Cmd_SwitchModeGroup(const CCommand &args);
+void Cmd_ReloadConfig(const CCommand &args);
+void Cmd_ListModeGroups(const CCommand &args);
+void Cmd_CurrentModeGroup(const CCommand &args);
+
+class ModeGroupConfigParser : public ITextListener_SMC
+{
+public:
+	ModeGroupConfigParser(std::map<std::string, ModeGroup> &groups) 
+		: m_Groups(groups), m_InModeGroups(false), m_InCvars(false), m_InCommands(false)
+	{
+	}
+
+	void ReadSMC_ParseStart()
+	{
+		m_CurrentGroup.name.clear();
+		m_CurrentGroup.plugin_directory.clear();
+		m_CurrentGroup.plugin_files.clear();
+		m_CurrentGroup.cvars.clear();
+		m_CurrentGroup.commands.clear();
+		m_InModeGroups = false;
+		m_InCvars = false;
+		m_InCommands = false;
+	}
+
+	SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name)
+	{
+		if (strcmp(name, "ModeGroups") == 0)
+		{
+			m_InModeGroups = true;
+			return SMCResult_Continue;
+		}
+
+		if (m_InModeGroups && !m_CurrentGroup.name.empty() && strcmp(name, "cvars") == 0)
+		{
+			m_InCvars = true;
+			return SMCResult_Continue;
+		}
+
+		if (m_InModeGroups && !m_CurrentGroup.name.empty() && strcmp(name, "commands") == 0)
+		{
+			m_InCommands = true;
+			return SMCResult_Continue;
+		}
+
+		if (m_InModeGroups)
+		{
+			m_CurrentGroup.name = name;
+			return SMCResult_Continue;
+		}
+
+		return SMCResult_Continue;
+	}
+
+	SMCResult ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value)
+	{
+		if (m_CurrentGroup.name.empty())
+			return SMCResult_Continue;
+
+		if (m_InCvars)
+		{
+			m_CurrentGroup.cvars[key] = value;
+		}
+		else if (m_InCommands)
+		{
+			m_CurrentGroup.commands[key] = value;
+		}
+		else if (strcmp(key, "plugin_directory") == 0)
+		{
+			m_CurrentGroup.plugin_directory = value;
+		}
+
+		return SMCResult_Continue;
+	}
+
+	SMCResult ReadSMC_LeavingSection(const SMCStates *states)
+	{
+		if (m_InCvars)
+		{
+			m_InCvars = false;
+		}
+		else if (m_InCommands)
+		{
+			m_InCommands = false;
+		}
+		else if (!m_CurrentGroup.name.empty())
+		{
+			m_Groups[m_CurrentGroup.name] = m_CurrentGroup;
+			m_CurrentGroup.name.clear();
+			m_CurrentGroup.plugin_directory.clear();
+			m_CurrentGroup.plugin_files.clear();
+			m_CurrentGroup.cvars.clear();
+			m_CurrentGroup.commands.clear();
+		}
+		else if (m_InModeGroups)
+		{
+			m_InModeGroups = false;
+		}
+
+		return SMCResult_Continue;
+	}
+
+	void ReadSMC_ParseEnd(bool halted, bool failed)
+	{
+	}
+
+private:
+	std::map<std::string, ModeGroup> &m_Groups;
+	ModeGroup m_CurrentGroup;
+	bool m_InModeGroups;
+	bool m_InCvars;
+	bool m_InCommands;
+};
+
+bool ModeGroupExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
+{
+	if (!LoadConfig(error, maxlen))
+	{
+		return false;
+	}
+
+	sharesys->AddNatives(myself, g_Natives);
+
+	m_pModeGroupChangedForward = forwards->CreateForward("OnModeGroupChanged", ET_Ignore, 2, NULL, Param_String, Param_String);
+
+	ConCmdBase *pCmd;
+	pCmd = new ConCommand("modegroup_switch", Cmd_SwitchModeGroup, "Switch to a mode group", FCVAR_NONE);
+	pCmd->AddCommand();
+	pCmd = new ConCommand("modegroup_reload", Cmd_ReloadConfig, "Reload mode group configuration", FCVAR_NONE);
+	pCmd->AddCommand();
+	pCmd = new ConCommand("modegroup_list", Cmd_ListModeGroups, "List available mode groups", FCVAR_NONE);
+	pCmd->AddCommand();
+	pCmd = new ConCommand("modegroup_current", Cmd_CurrentModeGroup, "Show current mode group", FCVAR_NONE);
+	pCmd->AddCommand();
+
+	g_pSM->LogMessage(myself, "Mode Group Manager loaded successfully");
+
+	return true;
 }
 
-void Command_ReloadConfig(const CCommand &command) {
-    g_ModeGroupExt.ReloadConfig();
-    g_pSM->LogMessage(myself, "ModeGroups 配置文件已重载");
+void ModeGroupExtension::SDK_OnUnload()
+{
+	UnloadCurrentModeGroup();
+
+	if (m_pModeGroupChangedForward)
+	{
+		forwards->ReleaseForward(m_pModeGroupChangedForward);
+		m_pModeGroupChangedForward = NULL;
+	}
+
+	g_pSM->LogMessage(myself, "Mode Group Manager unloaded");
 }
 
-ConCommand sm_mode("sm_mode", Command_SwitchMode, "切换插件分组模式", FCVAR_NONE);
-ConCommand sm_mode_reload("sm_mode_reload", Command_ReloadConfig, "重新加载 ModeGroups 配置文件", FCVAR_NONE);
-
-bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late) {
-    SM_GET_IFACE(PLUGINSYSTEM, m_pPluginSys);
-    SM_GET_IFACE(TEXTPARSERS, m_pTextParsers);
-    SM_GET_IFACE(GAMEHELPERS, m_pGameHelpers);
-    
-    // 我们需要更通用的 ICvar 接口
-    m_pCVar = (ICvar *)g_pSM->GetEngineFactory()("VEngineCvar007", nullptr);
-    if (!m_pCVar) {
-        m_pCVar = (ICvar *)g_pSM->GetEngineFactory()("VEngineCvar004", nullptr);
-    }
-
-    if (!m_pPluginSys || !m_pTextParsers || !m_pCVar) {
-        snprintf(error, maxlength, "必要的 SourceMod 接口初始化失败");
-        return false;
-    }
-
-    LoadConfig();
-
-    m_pCVar->RegisterConCommand(&sm_mode);
-    m_pCVar->RegisterConCommand(&sm_mode_reload);
-    return true;
+void ModeGroupExtension::SDK_OnAllLoaded()
+{
 }
 
-void ModeGroupExt::SDK_OnUnload() {
-    UnloadCurrentModePlugins();
-    if (m_pCVar) {
-        m_pCVar->UnregisterConCommand(&sm_mode);
-        m_pCVar->UnregisterConCommand(&sm_mode_reload);
-    }
+bool ModeGroupExtension::QueryRunning(char *error, size_t maxlen)
+{
+	return true;
 }
 
-bool ModeGroupExt::LoadConfig() {
-    char configPath[PLATFORM_MAX_PATH];
-    g_pSM->BuildPath(Path_SM, configPath, sizeof(configPath), "configs/modegroup.cfg");
+bool ModeGroupExtension::LoadConfig(char *error, size_t maxlen)
+{
+	char path[PLATFORM_MAX_PATH];
+	g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
 
-    KeyValues *kv = new KeyValues("ModeGroups");
-    if (!kv->LoadFromFile(g_pFullFileSystem, configPath)) {
-        delete kv;
-        g_pSM->LogError(myself, "无法加载配置文件: %s", configPath);
-        return false;
-    }
+	ModeGroupConfigParser parser(m_ModeGroups);
+	SMCStates states;
 
-    m_Modes.clear();
+	if (!textparsers->ParseFile_SMC(path, &parser, &states))
+	{
+		ke::SafeStrcpy(error, maxlen, "Failed to parse modegroup.cfg");
+		return false;
+	}
 
-    KeyValues *pMode = kv->GetFirstTrueSubKey();
-    while (pMode) {
-        const char *modeName = pMode->GetName();
-        ModeGroup node;
+	g_pSM->LogMessage(myself, "Loaded %zu mode groups", m_ModeGroups.size());
 
-        // 解析 load 部分
-        KeyValues *pLoad = pMode->FindKey("load");
-        if (pLoad) {
-            KeyValues *pValue = pLoad->GetFirstValue();
-            while (pValue) {
-                node.pluginsToLoad.push_back(pValue->GetString());
-                pValue = pValue->GetNextValue();
-            }
-        }
-
-        // 解析 unload 部分
-        KeyValues *pUnload = pMode->FindKey("unload");
-        if (pUnload) {
-            KeyValues *pValue = pUnload->GetFirstValue();
-            while (pValue) {
-                node.pluginsToUnload.push_back(pValue->GetString());
-                pValue = pValue->GetNextValue();
-            }
-        }
-
-        // 解析 cvars 部分
-        KeyValues *pCvars = pMode->FindKey("cvars");
-        if (pCvars) {
-            KeyValues *pValue = pCvars->GetFirstValue();
-            while (pValue) {
-                node.cvars.push_back({pValue->GetName(), pValue->GetString()});
-                pValue = pValue->GetNextValue();
-            }
-        }
-
-        // 解析 commands 部分
-        KeyValues *pCmds = pMode->FindKey("commands");
-        if (pCmds) {
-            KeyValues *pValue = pCmds->GetFirstValue();
-            while (pValue) {
-                node.commands.push_back({pValue->GetName(), pValue->GetString()});
-                pValue = pValue->GetNextValue();
-            }
-        }
-
-        m_Modes[modeName] = node;
-        pMode = pMode->GetNextTrueSubKey();
-    }
-
-    delete kv;
-    return true;
+	return true;
 }
 
-void ModeGroupExt::ReloadConfig() {
-    LoadConfig();
+bool ModeGroupExtension::SwitchModeGroup(const char *groupName)
+{
+	std::string oldGroup = m_CurrentModeGroup;
+
+	UnloadCurrentModeGroup();
+
+	std::map<std::string, ModeGroup>::iterator it = m_ModeGroups.find(groupName);
+	if (it == m_ModeGroups.end())
+	{
+		g_pSM->LogError(myself, "Mode group '%s' not found", groupName);
+		return false;
+	}
+
+	LoadModeGroup(it->second);
+
+	m_CurrentModeGroup = groupName;
+
+	if (m_pModeGroupChangedForward)
+	{
+		m_pModeGroupChangedForward->PushString(oldGroup.c_str());
+		m_pModeGroupChangedForward->PushString(groupName);
+		m_pModeGroupChangedForward->Execute(NULL);
+	}
+
+	g_pSM->LogMessage(myself, "Switched to mode group: %s", groupName);
+
+	return true;
 }
 
-bool ModeGroupExt::SwitchMode(const char* modeName) {
-    auto it = m_Modes.find(modeName);
-    if (it == m_Modes.end()) {
-        g_pSM->LogError(myself, "模式切换失败: 未找到模式 [%s]", modeName);
-        return false;
-    }
+void ModeGroupExtension::UnloadCurrentModeGroup()
+{
+	if (m_CurrentModeGroup.empty())
+		return;
 
-    const ModeGroup& mode = it->second;
+	for (size_t i = 0; i < m_LoadedPlugins.size(); i++)
+	{
+		UnloadPlugin(m_LoadedPlugins[i].c_str());
+	}
 
-    // 1. 卸载该模式额外加载的插件
-    UnloadCurrentModePlugins();
-
-    // 2. 处理指定的卸载列表 (从全局插件列表中查找)
-    for (const auto& target : mode.pluginsToUnload) {
-        char fullPath[PLATFORM_MAX_PATH];
-        g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", target.c_str());
-        std::string targetPath = fullPath;
-
-        IPluginIterator *pIter = m_pPluginSys->GetPluginIterator();
-        while (pIter->MorePlugins()) {
-            IPlugin *p = pIter->GetPlugin();
-            if (p->GetStatus() <= Plugin_Paused) {
-                std::string pluginFile = p->GetFilename();
-                // 检查是否匹配文件或位于目录下
-                if (pluginFile.find(targetPath) == 0) {
-                    m_pPluginSys->UnloadPlugin(p);
-                }
-            }
-            pIter->NextPlugin();
-        }
-        pIter->Release();
-    }
-
-    // 3. 处理加载列表
-    for (const auto& target : mode.pluginsToLoad) {
-        char fullPath[PLATFORM_MAX_PATH];
-        g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", target.c_str());
-        ScanAndLoadPlugins(fullPath);
-    }
-
-    // 4. 应用 Cvars
-    for (const auto& cv : mode.cvars) {
-        ConVar *pVar = m_pCVar->FindVar(cv.first.c_str());
-        if (pVar) {
-            pVar->SetValue(cv.second.c_str());
-        }
-    }
-
-    // 5. 执行 Commands
-    for (const auto& cmd : mode.commands) {
-        if (m_pGameHelpers) {
-            std::string fullCmd = cmd.first;
-            if (!cmd.second.empty()) {
-                fullCmd += " ";
-                fullCmd += cmd.second;
-            }
-            m_pGameHelpers->ServerCommand(fullCmd.c_str());
-        }
-    }
-
-    g_pSM->LogMessage(myself, "已切换至模式 [%s], 加载了 %d 个专属插件", modeName, (int)m_CurrentModePlugins.size());
-    return true;
+	m_LoadedPlugins.clear();
+	m_CurrentModeGroup.clear();
 }
 
-void ModeGroupExt::ScanAndLoadPlugins(const std::string& path) {
-    std::vector<std::string> files;
-    ScanPluginsRecursive(path, files);
+void ModeGroupExtension::LoadModeGroup(const ModeGroup &group)
+{
+	if (!group.plugin_directory.empty())
+	{
+		std::vector<std::string> plugins;
+		ScanDirectoryForPlugins(group.plugin_directory.c_str(), plugins);
 
-    for (const auto& file : files) {
-        char loadErr[256];
-        bool wasLoaded = false;
-        // 模式加载的插件标记为 PluginType_MapUpdated 以便在需要时管理
-        IPlugin *p = m_pPluginSys->LoadPlugin(file.c_str(), false, PluginType_MapUpdated, loadErr, sizeof(loadErr), &wasLoaded);
-        if (p && !wasLoaded) {
-            m_CurrentModePlugins.push_back(p);
-        }
-    }
+		for (size_t i = 0; i < plugins.size(); i++)
+		{
+			if (LoadPlugin(plugins[i].c_str()))
+			{
+				m_LoadedPlugins.push_back(plugins[i]);
+			}
+		}
+	}
+
+	for (std::map<std::string, std::string>::const_iterator it = group.cvars.begin();
+		it != group.cvars.end(); ++it)
+	{
+		ConVar *pCvar = icvar->FindVar(it->first.c_str());
+		if (pCvar)
+		{
+			pCvar->SetValue(it->second.c_str());
+			g_pSM->LogMessage(myself, "Set cvar %s to %s", it->first.c_str(), it->second.c_str());
+		}
+		else
+		{
+			g_pSM->LogError(myself, "Cvar %s not found", it->first.c_str());
+		}
+	}
+
+	for (std::map<std::string, std::string>::const_iterator it = group.commands.begin();
+		it != group.commands.end(); ++it)
+	{
+		char cmd[256];
+		ke::SafeSprintf(cmd, sizeof(cmd), "%s %s", it->first.c_str(), it->second.c_str());
+		engine->ServerCommand(cmd);
+		g_pSM->LogMessage(myself, "Executed command: %s", cmd);
+	}
 }
 
-void ModeGroupExt::ScanPluginsRecursive(const std::string& path, std::vector<std::string>& files) {
-    if (!fs::exists(path)) return;
+void ModeGroupExtension::ScanDirectoryForPlugins(const char *path, std::vector<std::string> &plugins)
+{
+	char fullPath[PLATFORM_MAX_PATH];
+	g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", path);
 
-    if (fs::is_regular_file(path)) {
-        if (fs::path(path).extension() == ".smx") {
-            files.push_back(path);
-        }
-    } else if (fs::is_directory(path)) {
-        for (const auto& entry : fs::recursive_directory_iterator(path)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".smx") {
-                files.push_back(entry.path().string());
-            }
-        }
-    }
+	IDirectory *dir = libsys->OpenDirectory(fullPath);
+	if (!dir)
+	{
+		g_pSM->LogError(myself, "Could not open directory: %s", fullPath);
+		return;
+	}
+
+	while (dir->MoreFiles())
+	{
+		const char *name = dir->GetEntryName();
+		bool isDir = dir->IsEntryDirectory();
+
+		if (isDir && strcmp(name, ".") != 0 && strcmp(name, "..") != 0)
+		{
+			char subPath[PLATFORM_MAX_PATH];
+			ke::SafeSprintf(subPath, sizeof(subPath), "%s/%s", path, name);
+			ScanDirectoryForPlugins(subPath, plugins);
+		}
+		else if (!isDir)
+		{
+			size_t len = strlen(name);
+			if (len > 4 && strcasecmp(name + len - 4, ".smx") == 0)
+			{
+				char pluginPath[PLATFORM_MAX_PATH];
+				ke::SafeSprintf(pluginPath, sizeof(pluginPath), "%s/%s", path, name);
+				plugins.push_back(pluginPath);
+			}
+		}
+
+		dir->NextFile();
+	}
+
+	libsys->CloseDirectory(dir);
 }
 
-void ModeGroupExt::UnloadCurrentModePlugins() {
-    for (IPlugin* p : m_CurrentModePlugins) {
-        if (p && p->GetStatus() <= Plugin_Paused) {
-            m_pPluginSys->UnloadPlugin(p);
-        }
-    }
-    m_CurrentModePlugins.clear();
+bool ModeGroupExtension::LoadPlugin(const char *path)
+{
+	char fullPath[PLATFORM_MAX_PATH];
+	g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", path);
+
+	IPlugin *pPlugin = pluginsys->FindPluginByFile(fullPath);
+	if (pPlugin)
+	{
+		if (pPlugin->GetStatus() == Plugin_Running)
+		{
+			g_pSM->LogMessage(myself, "Plugin already loaded: %s", path);
+			return true;
+		}
+	}
+
+	char error[256];
+	PluginId id;
+	if (!pluginsys->LoadPlugin(fullPath, NULL, error, sizeof(error), &id))
+	{
+		g_pSM->LogError(myself, "Failed to load plugin %s: %s", path, error);
+		return false;
+	}
+
+	g_pSM->LogMessage(myself, "Loaded plugin: %s", path);
+	return true;
+}
+
+void ModeGroupExtension::UnloadPlugin(const char *path)
+{
+	char fullPath[PLATFORM_MAX_PATH];
+	g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", path);
+
+	IPlugin *pPlugin = pluginsys->FindPluginByFile(fullPath);
+	if (!pPlugin)
+	{
+		return;
+	}
+
+	if (pPlugin->GetStatus() != Plugin_Running)
+	{
+		return;
+	}
+
+	PluginId id = pPlugin->GetId();
+	char error[256];
+	if (!pluginsys->UnloadPlugin(id, error, sizeof(error)))
+	{
+		g_pSM->LogError(myself, "Failed to unload plugin %s: %s", path, error);
+		return;
+	}
+
+	g_pSM->LogMessage(myself, "Unloaded plugin: %s", path);
+}
+
+void ModeGroupExtension::ReloadConfig()
+{
+	UnloadCurrentModeGroup();
+	m_ModeGroups.clear();
+
+	char error[256];
+	if (LoadConfig(error, sizeof(error)))
+	{
+		g_pSM->LogMessage(myself, "Configuration reloaded successfully");
+	}
+	else
+	{
+		g_pSM->LogError(myself, "Failed to reload configuration: %s", error);
+	}
+}
+
+void ModeGroupExtension::ListModeGroups()
+{
+	g_pSM->LogMessage(myself, "Available mode groups:");
+	for (std::map<std::string, ModeGroup>::iterator it = m_ModeGroups.begin();
+		it != m_ModeGroups.end(); ++it)
+	{
+		g_pSM->LogMessage(myself, "  - %s", it->first.c_str());
+	}
+}
+
+cell_t Native_SwitchModeGroup(IPluginContext *pContext, const cell_t *params)
+{
+	char *groupName;
+	pContext->LocalToString(params[1], &groupName);
+
+	return g_ModeGroupExtension.SwitchModeGroup(groupName) ? 1 : 0;
+}
+
+cell_t Native_GetCurrentModeGroup(IPluginContext *pContext, const cell_t *params)
+{
+	char *buffer;
+	pContext->LocalToString(params[1], &buffer);
+	ke::SafeStrcpy(buffer, params[2], g_ModeGroupExtension.m_CurrentModeGroup.c_str());
+	return 1;
+}
+
+cell_t Native_ReloadConfig(IPluginContext *pContext, const cell_t *params)
+{
+	g_ModeGroupExtension.ReloadConfig();
+	return 1;
+}
+
+sp_nativeinfo_t g_Natives[] = 
+{
+	{"ModeGroup_Switch",			Native_SwitchModeGroup},
+	{"ModeGroup_GetCurrent",		Native_GetCurrentModeGroup},
+	{"ModeGroup_ReloadConfig",		Native_ReloadConfig},
+	{NULL,							NULL}
+};
+
+void Cmd_SwitchModeGroup(const CCommand &args)
+{
+	if (args.ArgC() < 2)
+	{
+		Msg("Usage: modegroup_switch <groupname>\n");
+		return;
+	}
+
+	g_ModeGroupExtension.SwitchModeGroup(args.Arg(1));
+}
+
+void Cmd_ReloadConfig(const CCommand &args)
+{
+	g_ModeGroupExtension.ReloadConfig();
+}
+
+void Cmd_ListModeGroups(const CCommand &args)
+{
+	g_ModeGroupExtension.ListModeGroups();
+}
+
+void Cmd_CurrentModeGroup(const CCommand &args)
+{
+	if (g_ModeGroupExtension.m_CurrentModeGroup.empty())
+	{
+		Msg("No mode group currently active\n");
+	}
+	else
+	{
+		Msg("Current mode group: %s\n", g_ModeGroupExtension.m_CurrentModeGroup.c_str());
+	}
 }
