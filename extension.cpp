@@ -17,6 +17,22 @@ bool ModeGroupExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddInterface(myself, this);
     sharesys->RegisterLibrary(myself, "modegroup");
 
+    // Get SourceMod interface
+    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
+    if (!sm)
+    {
+        snprintf(error, maxlen, "Failed to get SourceMod interface");
+        return false;
+    }
+
+    // Get ICvar interface
+    ICvar *cvar = (ICvar *)sharesys->RequestInterface(ICvar_Name);
+    if (!cvar)
+    {
+        snprintf(error, maxlen, "Failed to get ICvar interface");
+        return false;
+    }
+
     if (!LoadConfig())
     {
         snprintf(error, maxlen, "Failed to load config file");
@@ -30,7 +46,7 @@ bool ModeGroupExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
     }
 
     m_pModeCommand = new ConCommand("sm_mode", OnModeCommand, "Switch game mode (see modegroup.cfg)", FCVAR_SPONLY | FCVAR_GAMEDLL);
-    g_pCVar->RegisterConCommand(m_pModeCommand);
+    cvar->RegisterConCommand(m_pModeCommand);
 
     return true;
 }
@@ -51,7 +67,12 @@ void ModeGroupExtension::SDK_OnUnload()
 
     if (m_pModeCommand)
     {
-        g_pCVar->UnregisterConCommand(m_pModeCommand);
+        // Get ICvar interface
+        ICvar *cvar = (ICvar *)sharesys->RequestInterface(ICvar_Name);
+        if (cvar)
+        {
+            cvar->UnregisterConCommand(m_pModeCommand);
+        }
         delete m_pModeCommand;
         m_pModeCommand = nullptr;
     }
@@ -83,11 +104,16 @@ void ModeGroupExtension::OnPluginUnloaded(IPlugin *plugin)
 
 bool ModeGroupExtension::LoadConfig()
 {
+    // Get SourceMod interface
+    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
+    if (!sm)
+        return false;
+
     char path[PLATFORM_MAX_PATH];
-    g_pSM->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
+    sm->BuildPath(Path_SM, path, sizeof(path), "configs/modegroup.cfg");
 
     KeyValues *kv = new KeyValues("ModeGroups");
-    if (!kv->LoadFromFile(g_pSM->GetFileSystem(), path))
+    if (!kv->LoadFromFile(sm->GetFileSystem(), path))
     {
         kv->deleteThis();
         return false;
@@ -158,8 +184,13 @@ bool ModeGroupExtension::LoadConfig()
 
 void ModeGroupExtension::CollectPluginsFromDir(const char *relativeDir, std::vector<std::string> &outFiles, bool recursive)
 {
+    // Get SourceMod interface
+    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
+    if (!sm)
+        return;
+
     char fullPath[PLATFORM_MAX_PATH];
-    g_pSM->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
+    sm->BuildPath(Path_SM, fullPath, sizeof(fullPath), "plugins/%s", relativeDir);
 
     ILibrarySys *libsys = (ILibrarySys *)sharesys->RequestInterface(ILibrarySys_Name);
     if (!libsys)
@@ -176,7 +207,7 @@ void ModeGroupExtension::CollectPluginsFromDir(const char *relativeDir, std::vec
             if (recursive && strcmp(dir->GetEntryName(), ".") != 0 && strcmp(dir->GetEntryName(), "..") != 0)
             {
                 char subDir[PLATFORM_MAX_PATH];
-                g_pSM->Format(subDir, sizeof(subDir), "%s/%s", relativeDir, dir->GetEntryName());
+                sm->Format(subDir, sizeof(subDir), "%s/%s", relativeDir, dir->GetEntryName());
                 CollectPluginsFromDir(subDir, outFiles, recursive);
             }
         }
@@ -186,7 +217,7 @@ void ModeGroupExtension::CollectPluginsFromDir(const char *relativeDir, std::vec
             if (strstr(name, ".smx") || strstr(name, ".SMX"))
             {
                 char relativePath[PLATFORM_MAX_PATH];
-                g_pSM->Format(relativePath, sizeof(relativePath), "%s/%s", relativeDir, name);
+                sm->Format(relativePath, sizeof(relativePath), "%s/%s", relativeDir, name);
                 outFiles.push_back(relativePath);
             }
         }
@@ -223,7 +254,12 @@ void ModeGroupExtension::LoadModePlugins(const std::vector<std::string> &files)
             IPlugin *pl = mgr->LoadPlugin(file.c_str(), false, SourceMod::PluginType_Private, error, sizeof(error), &wasLoaded);
             if (!pl)
             {
-                g_pSM->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
+                // Get SourceMod interface for logging
+                ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
+                if (sm)
+                {
+                    sm->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
+                }
             }
         }
     }
@@ -231,22 +267,33 @@ void ModeGroupExtension::LoadModePlugins(const std::vector<std::string> &files)
 
 void ModeGroupExtension::ApplyModeSettings(const ModeInfo &mode)
 {
+    // Get SourceMod interface
+    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
+    if (!sm)
+        return;
+
+    // Get ICvar interface
+    ICvar *cvar = (ICvar *)sharesys->RequestInterface(ICvar_Name);
+
     for (const auto &it : mode.cvars)
     {
-        ConVar *cvar = g_pCVar->FindVar(it.first.c_str());
         if (cvar)
         {
-            cvar->SetValue(it.second.c_str());
-        }
-        else
-        {
-            g_pSM->LogError(myself, "Cvar %s not found", it.first.c_str());
+            ConVar *convar = cvar->FindVar(it.first.c_str());
+            if (convar)
+            {
+                convar->SetValue(it.second.c_str());
+            }
+            else
+            {
+                sm->LogError(myself, "Cvar %s not found", it.first.c_str());
+            }
         }
     }
 
     for (const std::string &cmd : mode.commands)
     {
-        g_pSM->InsertServerCommand(cmd.c_str());
+        sm->InsertServerCommand(cmd.c_str());
     }
 }
 
@@ -277,19 +324,24 @@ bool ModeGroupExtension::SwitchToMode(const char *modeName)
 
 void ModeGroupExtension::OnModeCommand(const CCommand &command)
 {
+    // Get SourceMod interface
+    ISourceMod *sm = (ISourceMod *)sharesys->RequestInterface(ISourceMod_Name);
+    if (!sm)
+        return;
+
     if (command.ArgC() < 2)
     {
-        g_pSM->LogMessage(myself, "Usage: sm_mode <modename>");
+        sm->LogMessage(myself, "Usage: sm_mode <modename>");
         return;
     }
 
     const char *modeName = command.Arg(1);
     if (g_ModeGroup.SwitchToMode(modeName))
     {
-        g_pSM->LogMessage(myself, "Switched to mode '%s'", modeName);
+        sm->LogMessage(myself, "Switched to mode '%s'", modeName);
     }
     else
     {
-        g_pSM->LogMessage(myself, "Unknown mode '%s'", modeName);
+        sm->LogMessage(myself, "Unknown mode '%s'", modeName);
     }
 }
