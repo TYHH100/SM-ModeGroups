@@ -6,7 +6,7 @@
 #include <IPluginSys.h>
 #include <IForwardSys.h>
 #include <IHandleSys.h>
-#include <ICvar.h>
+#include <icvar.h>
 #include <IKeyValues.h>
 #include <vector>
 #include <string>
