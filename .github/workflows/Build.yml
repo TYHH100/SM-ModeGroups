@@ -21,16 +21,18 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Prepare env
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
       - name: Install Linux build dependencies (32-bit/64-bit)
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            gcc-12 g++-12 gcc-12-multilib g++-12-multilib \
-            libstdc++-12-dev lib32stdc++-12-dev \
-            libc6-dev libc6-dev-i386 \
-            linux-libc-dev linux-libc-dev:i386 \
-            zlib1g-dev zlib1g-dev:i386
+          sudo apt-get install -y clang g++-multilib
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
 
       - name: Checking out SourceMod
         uses: actions/checkout@v6
