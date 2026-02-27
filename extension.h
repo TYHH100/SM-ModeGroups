@@ -13,6 +13,14 @@
 
 #include <tier1/convar.h>
 
+struct ModeGroup
+{
+    std::vector<std::string> pluginsToLoad;
+    std::vector<std::string> pluginsToUnload;
+    std::vector<std::pair<std::string, std::string>> cvars;
+    std::vector<std::pair<std::string, std::string>> commands;
+};
+
 class ModeGroupExt : public SDKExtension
 {
 public:
@@ -21,16 +29,21 @@ public:
 
 public:
     bool SwitchMode(const char* modeName);
+    void ReloadConfig();
 
 private:
     void UnloadCurrentModePlugins();
     void ScanAndLoadPlugins(const std::string& path);
+    bool LoadConfig();
+    void ScanPluginsRecursive(const std::string& path, std::vector<std::string>& files);
 
 private:
-    std::vector<IPlugin*> m_LoadedPlugins;
+    std::vector<IPlugin*> m_CurrentModePlugins;
+    std::map<std::string, ModeGroup> m_Modes;
     IPluginManager *m_pPluginSys = nullptr;
     ITextParsers *m_pTextParsers = nullptr;
     IGameHelpers *m_pGameHelpers = nullptr;
+    ICvar *m_pCVar = nullptr;
 };
 
 extern ModeGroupExt g_ModeGroupExt;
