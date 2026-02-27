@@ -1,5 +1,12 @@
 #include "extension.h"
 #include <filesystem>
+#include <itextparsers.h>
+#include <string>
+
+// To fix the CVAR_INTERFACE_VERSION redefinition error:
+#if defined CVAR_INTERFACE_VERSION
+#undef CVAR_INTERFACE_VERSION
+#endif
 #include <eiface.h>
 #include <icvar.h>
 
@@ -8,8 +15,11 @@ namespace fs = std::filesystem;
 ModeGroupExt g_ModeGroupExt;
 SMEXT_LINK(&g_ModeGroupExt);
 
+// Define global interface pointers if they aren't automatically linked
+IGameConfig *g_pGameConfig = nullptr;
+IVEngineServer *engine = nullptr; 
+
 // --- SMC 配置文件解析器 ---
-// 用于解析 modegroup.cfg 
 class ModeConfigParser : public ITextListener_SMC
 {
 public:
@@ -17,40 +27,38 @@ public:
     std::string pluginDir;
     std::vector<std::pair<std::string, std::string>> cvars;
     std::vector<std::string> commands;
-
-    int state = 0; // 0: Root, 1: ModeGroups, 2: TargetMode, 3: cvars, 4: commands
+    int state = 0; 
     bool foundMode = false;
 
     ModeConfigParser(const char* mode) : targetMode(mode) {}
 
-    virtual void ReadSMC_ParseStart() {}
-    
-    virtual SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name) {
+    // These now return SMCResult correctly
+    SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name) override {
         if (state == 0 && strcmp(name, "ModeGroups") == 0) {
-            state = 1; // 进入 ModeGroups 
+            state = 1;
         } else if (state == 1 && strcmp(name, targetMode.c_str()) == 0) {
-            state = 2; // 找到目标模式 (如 "none") 
+            state = 2;
             foundMode = true;
         } else if (state == 2 && strcmp(name, "cvars") == 0) {
-            state = 3; // 进入 cvars 
+            state = 3;
         } else if (state == 2 && strcmp(name, "commands") == 0) {
-            state = 4; // 进入 commands 
+            state = 4;
         }
         return SMCResult_Continue;
     }
 
-    virtual SMCResult ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value) {
+    SMCResult ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value) override {
         if (state == 2 && strcmp(key, "plugin_directory") == 0) {
-            pluginDir = value; // 获取路径 
+            pluginDir = value;
         } else if (state == 3) {
             cvars.push_back({key, value});
         } else if (state == 4) {
-            commands.push_back(key); // 命令本体在 key 中 
+            commands.push_back(key);
         }
         return SMCResult_Continue;
     }
 
-    virtual SMCResult ReadSMC_LeavingSection(const SMCStates *states) {
+    SMCResult ReadSMC_LeavingSection(const SMCStates *states) override {
         if (state == 4 || state == 3) state = 2;
         else if (state == 2) state = 1;
         else if (state == 1) state = 0;
@@ -58,23 +66,28 @@ public:
     }
 };
 
-// --- 控制台命令回调 ---
+// --- Command Callback ---
 void Command_SwitchMode(const CCommand &command)
 {
     if (command.ArgC() < 2) {
-        META_CONPRINTF("[ModeGroup] Usage: sm_mode <mode_name>\n");
+        smutils->LogMessage(myself, "Usage: sm_mode <mode_name>");
         return;
     }
-    
-    const char* modeName = command.Arg(1);
-    g_ModeGroupExt.SwitchMode(modeName);
+    g_ModeGroupExt.SwitchMode(command.Arg(1));
 }
 
 ConCommand sm_mode("sm_mode", Command_SwitchMode, "Switch plugin mode group", FCVAR_NONE);
 
-// --- 扩展生命周期 ---
+// --- Extension Lifecycle ---
 bool ModeGroupExt::SDK_OnLoad(char *error, size_t maxlength, bool late)
 {
+    // Initialize Engine pointer
+    engine = iserver->GetEngine();
+    
+    if (!g_pCVar) {
+        libsys->GetInterfaceFactory(engine); // Ensure CVar is available
+    }
+
     g_pCVar->RegisterConCommand(&sm_mode);
     return true;
 }
@@ -85,7 +98,6 @@ void ModeGroupExt::SDK_OnUnload()
     g_pCVar->UnregisterConCommand(&sm_mode);
 }
 
-// --- 核心逻辑 ---
 bool ModeGroupExt::SwitchMode(const char* modeName)
 {
     char configPath[PLATFORM_MAX_PATH];
@@ -95,25 +107,19 @@ bool ModeGroupExt::SwitchMode(const char* modeName)
     SMCError err = textparsers->ParseSMCFile(configPath, &parser);
 
     if (err != SMCError_Okay || !parser.foundMode) {
-        smutils->LogError(myself, "Failed to load mode '%s' or parse error in modegroup.cfg", modeName);
+        smutils->LogError(myself, "Failed to load mode '%s' (Error code: %d)", modeName, err);
         return false;
     }
 
-    META_CONPRINTF("[ModeGroup] Switching mode to: %s\n", modeName);
-
-    // 1. 自动卸载上个模式的所有插件
     UnloadCurrentModePlugins();
 
-    // 2. 递归加载新模式指定的目录或文件 
     if (!parser.pluginDir.empty()) {
         char pluginPath[PLATFORM_MAX_PATH];
         g_pSM->BuildPath(Path_SM, pluginPath, sizeof(pluginPath), "plugins/%s", parser.pluginDir.c_str());
         LoadPluginsRecursively(pluginPath);
     }
 
-    // 3. 执行 Cvars 和 Commands 
     ExecuteCommandsAndCvars(parser.cvars, parser.commands);
-
     m_CurrentMode = modeName;
     return true;
 }
@@ -121,8 +127,7 @@ bool ModeGroupExt::SwitchMode(const char* modeName)
 void ModeGroupExt::UnloadCurrentModePlugins()
 {
     for (IPlugin* plugin : m_LoadedPlugins) {
-        // 只有当插件还在加载状态时才卸载
-        if (plugin && plugin->GetStatus() == Plugin_Running) {
+        if (plugin && plugin->GetStatus() <= Plugin_Paused) {
             pluginsys->UnloadPlugin(plugin);
         }
     }
@@ -131,40 +136,16 @@ void ModeGroupExt::UnloadCurrentModePlugins()
 
 void ModeGroupExt::LoadPluginsRecursively(const std::string& path)
 {
-    if (!fs::exists(path)) {
-        smutils->LogError(myself, "Path does not exist: %s", path.c_str());
-        return;
-    }
+    if (!fs::exists(path)) return;
 
-    std::vector<std::string> targetFiles;
-
-    // 支持直接指定单文件，或指定文件夹名递归所有文件
-    if (fs::is_regular_file(path) && fs::path(path).extension() == ".smx") {
-        targetFiles.push_back(path);
-    } else if (fs::is_directory(path)) {
+    if (fs::is_directory(path)) {
         for (const auto& entry : fs::recursive_directory_iterator(path)) {
             if (entry.is_regular_file() && entry.path().extension() == ".smx") {
-                targetFiles.push_back(entry.path().string());
+                char error[256];
+                bool wasloaded = false;
+                IPlugin* p = pluginsys->LoadPlugin(entry.path().string().c_str(), false, nullptr, error, sizeof(error), &wasloaded);
+                if (p && !wasloaded) m_LoadedPlugins.push_back(p);
             }
-        }
-    }
-
-    // 调用 IPluginManager 加载插件
-    for (const auto& file : targetFiles) {
-        char error[256];
-        bool wasloaded = false;
-        
-        // 使用绝对路径加载
-        IPlugin* plugin = pluginsys->LoadPlugin(file.c_str(), false, nullptr, error, sizeof(error), &wasloaded);
-        
-        if (plugin) {
-            // 如果插件是之前手动或其他方式加载的，我们不纳入 ModeGroup 的自动卸载追踪
-            if (!wasloaded) {
-                m_LoadedPlugins.push_back(plugin);
-                META_CONPRINTF("[ModeGroup] Loaded: %s\n", file.c_str());
-            }
-        } else {
-            smutils->LogError(myself, "Failed to load %s: %s", file.c_str(), error);
         }
     }
 }
@@ -172,18 +153,13 @@ void ModeGroupExt::LoadPluginsRecursively(const std::string& path)
 void ModeGroupExt::ExecuteCommandsAndCvars(const std::vector<std::pair<std::string, std::string>>& cvars, 
                                            const std::vector<std::string>& commands)
 {
-    // 设置 Cvars 
     for (const auto& cvar : cvars) {
         ConVar* pCvar = g_pCVar->FindVar(cvar.first.c_str());
-        if (pCvar) {
-            pCvar->SetValue(cvar.second.c_str());
-        }
+        if (pCvar) pCvar->SetValue(cvar.second.c_str());
     }
 
-    // 执行 Commands 
     for (const auto& cmd : commands) {
         engine->ServerCommand(cmd.c_str());
-        engine->ServerCommand("\n"); // 换行确保命令被推入
     }
     engine->ServerExecute();
 }
