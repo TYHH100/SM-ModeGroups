@@ -10,7 +10,7 @@ folder_list = [
   'addons/sourcemod/extensions',
   #'addons/sourcemod/scripting/include',
   #'addons/sourcemod/gamedata',
-  #'addons/sourcemod/configs',
+  'addons/sourcemod/configs',
 ]
 
 if 'x86_64' in Extension.target_archs:
@@ -45,12 +45,12 @@ def CopyFiles(src, dest, files):
 #  ]
 #)
 
-# Config Files
-#CopyFiles('configs', 'addons/sourcemod/configs',
-#  [ 'configfile.cfg',
-#  'otherconfig.cfg,
-#  ]
-#)
+Config Files
+CopyFiles('configs', 'addons/sourcemod/configs',
+ [ 'modegroup.cfg',
+ 'modegroup.cfg,
+ ]
+)
 
 # Copy binaries.
 for cxx_task in Extension.extensions:
