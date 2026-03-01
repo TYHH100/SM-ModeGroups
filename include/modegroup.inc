@@ -32,18 +32,7 @@ native void ModeGroup_ReloadConfig();
  */
 forward void OnModeGroupChanged(const char[] oldGroup, const char[] newGroup);
 
-public SharedPlugin __pl_modegroup = 
-{
-	name = "modegroup",
-	file = "modegroup.ext",
-#if defined REQUIRE_PLUGIN
-	required = 1
-#else
-	required = 0
-#endif
-};
-
-#if !defined REQUIRE_PLUGIN
+#if !defined REQUIRE_EXTENSIONS
 public void __pl_modegroup_SetNTVOptional()
 {
 	MarkNativeAsOptional("ModeGroup_Switch");
@@ -51,3 +40,19 @@ public void __pl_modegroup_SetNTVOptional()
 	MarkNativeAsOptional("ModeGroup_ReloadConfig");
 }
 #endif
+
+public Extension __ext_modegroup = 
+{
+	name = "modegroup",
+	file = "modegroup.ext",
+#if defined AUTOLOAD_EXTENSIONS
+	autoload = 1,
+#else
+	autoload = 0,
+#endif
+#if defined REQUIRE_EXTENSIONS
+	required = 1,
+#else
+	required = 0,
+#endif
+};

@@ -1,5 +1,5 @@
 # vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
-import os
+import os, sys
 
 # Name of your extesion, this will also be it's file name.
 projectName = 'modegroup'
@@ -16,7 +16,11 @@ sourceFiles = [
   os.path.join(Extension.sm_root, 'public', 'asm', 'libudis86', 'udis86.c'),
 ]
 
-project = builder.LibraryProject(projectName)
+###############
+# Make sure to edit PackageScript, which copies your files to their appropriate locations
+# Simple extensions do not need to modify past this point.
+
+project = Extension.HL2Project(builder, projectName + '.ext')
 
 if os.path.isfile(os.path.join(builder.currentSourcePath, 'sdk', 'smsdk_ext.cpp')):
   # Use the copy included in the project
@@ -27,16 +31,9 @@ else:
 
 project.sources += sourceFiles
 
+for cxx in builder.targets:
+  binary = Extension.HL2Config(builder, project, projectName + '.ext', cxx)
 
-for sdk_name in Extension.sdks:
-  sdk = Extension.sdks[sdk_name]
-  if sdk['name'] in ['mock']:
-    continue
 
-  for cxx in builder.targets:
-    if not cxx.target.arch in sdk['platforms'][cxx.target.platform]:
-      continue
 
-    binary = Extension.HL2ExtConfig(project, builder, cxx, projectName + '.ext.' + sdk['extension'], sdk)
-
-Extension.extensions += builder.Add(project)
+Extension.extensions = builder.Add(project)

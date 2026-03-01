@@ -8,9 +8,9 @@ builder.SetBuildFolder('package')
 # Add any folders you need to this list
 folder_list = [
   'addons/sourcemod/extensions',
-  #'addons/sourcemod/scripting/include',
+  'addons/sourcemod/scripting/include',
   #'addons/sourcemod/gamedata',
-  #'addons/sourcemod/configs',
+  'addons/sourcemod/configs',
 ]
 
 if 'x86_64' in Extension.target_archs:
@@ -34,9 +34,9 @@ def CopyFiles(src, dest, files):
     builder.AddCopy(source_path, dest_entry)
 
 # Include files 
-#CopyFiles('include', 'addons/sourcemod/scripting/include',
-#  [ 'sample.inc', ]
-#)
+CopyFiles('include', 'addons/sourcemod/scripting/include',
+ [ 'modegroup.inc', ]
+)
 
 # GameData files
 #CopyFiles('gamedata', 'addons/sourcemod/gamedata',
@@ -46,11 +46,14 @@ def CopyFiles(src, dest, files):
 #)
 
 # Config Files
-#CopyFiles('configs', 'addons/sourcemod/configs',
-#  [ 'configfile.cfg',
-#  'otherconfig.cfg,
-#  ]
-#)
+CopyFiles('configs', 'addons/sourcemod/configs',
+ [ 'modegroup.cfg']
+)
+
+# Autoload file
+CopyFiles('extensions', 'addons/sourcemod/extensions',
+ [ 'modegroup.autoload' ]
+)
 
 # Copy binaries.
 for cxx_task in Extension.extensions:

@@ -1,37 +1,7 @@
-/**
- * vim: set ts=4 :
- * =============================================================================
- * SourceMod Mode Groups Extension
- * Copyright (C) 2024.  All rights reserved.
- * =============================================================================
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License, version 3.0, as published by the
- * Free Software Foundation.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * As a special exception, AlliedModders LLC gives you permission to link the
- * code of this program (as well as its derivative works) to "Half-Life 2," the
- * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
- * by the Valve Corporation.  You must obey the GNU General Public License in
- * all respects for all other code used.  Additionally, AlliedModders LLC grants
- * this exception to all derivative works.  AlliedModders LLC defines further
- * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
- * or <http://www.sourcemod.net/license.php>.
- *
- * Version: $Id$
- */
-
 #include "extension.h"
 #include <sh_string.h>
 #include <ITextParsers.h>
+#include <IGameHelpers.h>
 
 ModeGroupExtension g_ModeGroupExtension;
 
@@ -43,7 +13,7 @@ class ModeGroupConfigParser : public ITextListener_SMC
 {
 public:
 	ModeGroupConfigParser(std::map<std::string, ModeGroup> &groups) 
-		: m_Groups(groups), m_InModeGroups(false), m_InCvars(false), m_InCommands(false)
+		: m_Groups(groups), m_InModeGroups(false), m_InCvars(false), m_InCommands(false), m_InLoadPlugins(false), m_InUnloadPlugins(false)
 	{
 	}
 
@@ -52,11 +22,16 @@ public:
 		m_CurrentGroup.name.clear();
 		m_CurrentGroup.plugin_directory.clear();
 		m_CurrentGroup.plugin_files.clear();
+		m_CurrentGroup.load_plugins.clear();
+		m_CurrentGroup.unload_plugins.clear();
+		m_CurrentGroup.use_sm_cvar = true;
 		m_CurrentGroup.cvars.clear();
 		m_CurrentGroup.commands.clear();
 		m_InModeGroups = false;
 		m_InCvars = false;
 		m_InCommands = false;
+		m_InLoadPlugins = false;
+		m_InUnloadPlugins = false;
 	}
 
 	SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name)
@@ -76,6 +51,18 @@ public:
 		if (m_InModeGroups && !m_CurrentGroup.name.empty() && strcmp(name, "commands") == 0)
 		{
 			m_InCommands = true;
+			return SMCResult_Continue;
+		}
+
+		if (m_InModeGroups && !m_CurrentGroup.name.empty() && strcmp(name, "load_plugins") == 0)
+		{
+			m_InLoadPlugins = true;
+			return SMCResult_Continue;
+		}
+
+		if (m_InModeGroups && !m_CurrentGroup.name.empty() && strcmp(name, "unload_plugins") == 0)
+		{
+			m_InUnloadPlugins = true;
 			return SMCResult_Continue;
 		}
 
@@ -101,9 +88,21 @@ public:
 		{
 			m_CurrentGroup.commands[key] = value;
 		}
+		else if (m_InLoadPlugins)
+		{
+			m_CurrentGroup.load_plugins.push_back(value);
+		}
+		else if (m_InUnloadPlugins)
+		{
+			m_CurrentGroup.unload_plugins.push_back(value);
+		}
 		else if (strcmp(key, "plugin_directory") == 0)
 		{
 			m_CurrentGroup.plugin_directory = value;
+		}
+		else if (strcmp(key, "use_sm_cvar") == 0)
+		{
+			m_CurrentGroup.use_sm_cvar = (strcmp(value, "1") == 0 || strcmp(value, "true") == 0);
 		}
 
 		return SMCResult_Continue;
@@ -119,12 +118,23 @@ public:
 		{
 			m_InCommands = false;
 		}
+		else if (m_InLoadPlugins)
+		{
+			m_InLoadPlugins = false;
+		}
+		else if (m_InUnloadPlugins)
+		{
+			m_InUnloadPlugins = false;
+		}
 		else if (!m_CurrentGroup.name.empty())
 		{
 			m_Groups[m_CurrentGroup.name] = m_CurrentGroup;
 			m_CurrentGroup.name.clear();
 			m_CurrentGroup.plugin_directory.clear();
 			m_CurrentGroup.plugin_files.clear();
+			m_CurrentGroup.load_plugins.clear();
+			m_CurrentGroup.unload_plugins.clear();
+			m_CurrentGroup.use_sm_cvar = true; // 重置为默认值
 			m_CurrentGroup.cvars.clear();
 			m_CurrentGroup.commands.clear();
 		}
@@ -146,6 +156,8 @@ private:
 	bool m_InModeGroups;
 	bool m_InCvars;
 	bool m_InCommands;
+	bool m_InLoadPlugins;
+	bool m_InUnloadPlugins;
 };
 
 bool ModeGroupExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
@@ -159,10 +171,7 @@ bool ModeGroupExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 	m_pModeGroupChangedForward = forwards->CreateForward("OnModeGroupChanged", ET_Ignore, 2, NULL, Param_String, Param_String);
 
-	rootconsole->AddRootConsoleCommand3("modegroup_switch", "Switch to a mode group", this);
-	rootconsole->AddRootConsoleCommand3("modegroup_reload", "Reload mode group configuration", this);
-	rootconsole->AddRootConsoleCommand3("modegroup_list", "List available mode groups", this);
-	rootconsole->AddRootConsoleCommand3("modegroup_current", "Show current mode group", this);
+	rootconsole->AddRootConsoleCommand3("modegroup", "Manage Mode Groups", this);
 
 	g_pSM->LogMessage(myself, "Mode Group Manager loaded successfully");
 
@@ -179,10 +188,7 @@ void ModeGroupExtension::SDK_OnUnload()
 		m_pModeGroupChangedForward = NULL;
 	}
 
-	rootconsole->RemoveRootConsoleCommand("modegroup_switch", this);
-	rootconsole->RemoveRootConsoleCommand("modegroup_reload", this);
-	rootconsole->RemoveRootConsoleCommand("modegroup_list", this);
-	rootconsole->RemoveRootConsoleCommand("modegroup_current", this);
+	rootconsole->RemoveRootConsoleCommand("modegroup", this);
 
 	g_pSM->LogMessage(myself, "Mode Group Manager unloaded");
 }
@@ -277,28 +283,54 @@ void ModeGroupExtension::LoadModeGroup(const ModeGroup &group)
 		}
 	}
 
+	// 加载手动指定的插件
+	for (size_t i = 0; i < group.load_plugins.size(); i++)
+	{
+		if (LoadPlugin(group.load_plugins[i].c_str()))
+		{
+			m_LoadedPlugins.push_back(group.load_plugins[i]);
+		}
+	}
+
+	// 卸载手动指定的插件
+	for (size_t i = 0; i < group.unload_plugins.size(); i++)
+	{
+		UnloadPlugin(group.unload_plugins[i].c_str());
+	}
+
 	for (std::map<std::string, std::string>::const_iterator it = group.cvars.begin();
 		it != group.cvars.end(); ++it)
 	{
-		ConVar *pCvar = cvar->FindVar(it->first.c_str());
-		if (pCvar)
+		char cmd[256];
+		if (group.use_sm_cvar)
 		{
-			pCvar->SetValue(it->second.c_str());
-			g_pSM->LogMessage(myself, "Set cvar %s to %s", it->first.c_str(), it->second.c_str());
+			ke::SafeSprintf(cmd, sizeof(cmd), "sm_cvar %s %s\n", it->first.c_str(), it->second.c_str());
 		}
 		else
 		{
-			g_pSM->LogError(myself, "Cvar %s not found", it->first.c_str());
+			ke::SafeSprintf(cmd, sizeof(cmd), "%s %s\n", it->first.c_str(), it->second.c_str());
 		}
+		gamehelpers->ServerCommand(cmd);
+		g_pSM->LogMessage(myself, "Set Cvar %s to %s", it->first.c_str(), it->second.c_str());
 	}
 
 	for (std::map<std::string, std::string>::const_iterator it = group.commands.begin();
 		it != group.commands.end(); ++it)
 	{
-		char cmd[256];
-		ke::SafeSprintf(cmd, sizeof(cmd), "%s %s", it->first.c_str(), it->second.c_str());
-		engine->ServerCommand(cmd);
-		g_pSM->LogMessage(myself, "Executed command: %s", cmd);
+		if (strcmp(it->first.c_str(), "command") == 0)
+		{
+			char cmd[256];
+			ke::SafeSprintf(cmd, sizeof(cmd), "%s\n", it->second.c_str());
+			gamehelpers->ServerCommand(cmd);
+			g_pSM->LogMessage(myself, "Executed Command: %s", it->second.c_str());
+		}
+		else
+		{
+			char cmd[256];
+			ke::SafeSprintf(cmd, sizeof(cmd), "%s %s\n", it->first.c_str(), it->second.c_str());
+			gamehelpers->ServerCommand(cmd);
+			g_pSM->LogMessage(myself, "Executed Command: %s", cmd);
+		}
 	}
 }
 
@@ -349,7 +381,7 @@ bool ModeGroupExtension::LoadPlugin(const char *path)
 
 	char error[256];
 	bool wasloaded;
-	IPlugin *pPlugin = plsys->LoadPlugin(fullPath, false, PluginType_MapUpdated, error, sizeof(error), &wasloaded);
+	IPlugin *pPlugin = plsys->LoadPlugin(path, false, PluginType_MapUpdated, error, sizeof(error), &wasloaded);
 	if (!pPlugin)
 	{
 		g_pSM->LogError(myself, "Failed to load plugin %s: %s", path, error);
@@ -370,7 +402,7 @@ void ModeGroupExtension::UnloadPlugin(const char *path)
 	while (iter->MorePlugins())
 	{
 		IPlugin *p = iter->GetPlugin();
-		if (strcmp(p->GetFilename(), fullPath) == 0)
+		if (strcmp(p->GetFilename(), path) == 0)
 		{
 			pPlugin = p;
 			break;
@@ -443,27 +475,41 @@ const char *ModeGroupExtension::GetCurrentModeGroupName()
 
 void ModeGroupExtension::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
 {
-	if (strcmp(cmdname, "modegroup_switch") == 0)
+	if (args->ArgC() == 2)
 	{
-		if (args->ArgC() < 3)
+		rootconsole->ConsolePrint("Mode Group Manager Menu:");
+		rootconsole->ConsolePrint("Usage: sm modegroup [arguments]");
+		rootconsole->ConsolePrint("    switch              - Switch to a mode group");
+		rootconsole->ConsolePrint("    reload              - Reload mode group configuration");
+		rootconsole->ConsolePrint("    list                - List available mode groups");
+		rootconsole->ConsolePrint("    current             - Show current mode group");
+		return;
+	}
+	else if (args->ArgC() >= 3)
+	{
+		const char *subcmd = args->Arg(2);
+		if (strcmp(subcmd, "switch") == 0)
 		{
-			rootconsole->ConsolePrint("Usage: sm modegroup_switch <groupname>");
-			return;
+			if (args->ArgC() < 4)
+			{
+				rootconsole->ConsolePrint("Usage: sm modegroup switch <groupname>");
+				return;
+			}
+			
+			SwitchModeGroup(args->Arg(3));
 		}
-		
-		SwitchModeGroup(args->Arg(2));
-	}
-	else if (strcmp(cmdname, "modegroup_reload") == 0)
-	{
-		ReloadConfig();
-	}
-	else if (strcmp(cmdname, "modegroup_list") == 0)
-	{
-		ListModeGroups();
-	}
-	else if (strcmp(cmdname, "modegroup_current") == 0)
-	{
-		CurrentModeGroup();
+		else if (strcmp(subcmd, "reload") == 0)
+		{
+			ReloadConfig();
+		}
+		else if (strcmp(subcmd, "list") == 0)
+		{
+			ListModeGroups();
+		}
+		else if (strcmp(subcmd, "current") == 0)
+		{
+			CurrentModeGroup();
+		}
 	}
 }
 

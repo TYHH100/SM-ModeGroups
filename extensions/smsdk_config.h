@@ -3,11 +3,11 @@
 
 #define SMEXT_CONF_NAME         "Mode Group Manager"
 #define SMEXT_CONF_DESCRIPTION  "Manages plugin loading/unloading by mode groups"
-#define SMEXT_CONF_VERSION      "1.0.0"
-#define SMEXT_CONF_AUTHOR       ""
-#define SMEXT_CONF_URL          ""
+#define SMEXT_CONF_VERSION      "1.0.2"
+#define SMEXT_CONF_AUTHOR       "TYHH100"
+#define SMEXT_CONF_URL          "https://github.com/TYHH100/SM-ModeGroups"
 #define SMEXT_CONF_LOGTAG       "MODEGROUP"
-#define SMEXT_CONF_LICENSE      ""
+#define SMEXT_CONF_LICENSE      "MIT"
 #define SMEXT_CONF_DATESTRING   __DATE__
 
 #define SMEXT_LINK(name) SDKExtension *g_pExtensionIface = name;

@@ -41,11 +41,11 @@ jobs:
 
       - name: Copy asm
         run: |
-          cp -r ${{ github.workspace }}/asm ${{ github.workspace }}/sourcemod-1.12/public/asm
+          cp -r ${{ github.workspace }}/build_dependa/asm ${{ github.workspace }}/sourcemod-1.12/public/asm
 
       - name: Copy libudis86
         run: |
-          cp -r ${{ github.workspace }}/libudis86 ${{ github.workspace }}/sourcemod-1.12/public/asm/libudis86
+          cp -r ${{ github.workspace }}/build_dependa/libudis86 ${{ github.workspace }}/sourcemod-1.12/public/asm/libudis86
 
       # - name: Checking out udis86
       #   uses: actions/checkout@v6
@@ -79,31 +79,10 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python setup.py install
 
-      - name: Checking out hl2sdk-manifests
-        uses: actions/checkout@v6
-        with:
-          repository: alliedmodders/hl2sdk-manifests
-          ref: master
-          path: hl2sdk-manifests
-
-      - name: Checking out hl2sdk-tf2
-        uses: actions/checkout@v6
-        with:
-          repository: alliedmodders/hl2sdk
-          ref: tf2
-          path: hl2sdk-tf2
-
-      # - name: Checking out hl2sdk-sdk2013
-      #   uses: actions/checkout@v6
-      #   with:
-      #     repository: alliedmodders/hl2sdk
-      #     ref: sdk2013
-      #     path: hl2sdk-sdk2013
-
       - name: Configure and Build
         run: |
           mkdir -p build && cd build
-          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/sourcemod-1.12" --mms-path="${{ github.workspace }}/metamod-1.12" --hl2sdk-manifest-path="${{ github.workspace }}/hl2sdk-manifests" --sdks="tf2" --targets="x86,x86_64"
+          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/sourcemod-1.12" --mms-path="${{ github.workspace }}/metamod-1.12" --targets="x86,x86_64"
           ambuild
 
       - name: Upload extension package
